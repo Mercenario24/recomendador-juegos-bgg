@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Recomendador de juegos de mesa</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera">
+        <div class="contenedor">
+            <p class="etiqueta-superior">
+                BOARDGAME RECOMMENDER
+            </p>
+
+            <h1>Encuentra tu próximo juego de mesa</h1>
+
+            <p class="descripcion-cabecera">
+                Indica las características de vuestra partida y
+                obtendrás recomendaciones basadas en BoardGameGeek.
+            </p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        <section class="panel-formulario">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="numero-paso">PASO 1</p>
+                    <h2>Cuéntanos qué buscas</h2>
+                </div>
+
+                <span class="contador-datos">
+                    {{ mecanicas|length }} mecánicas ·
+                    {{ categorias|length }} categorías
+                </span>
+            </div>
+
+            {% if error %}
+                <div class="mensaje-error">
+                    <strong>No se pudo realizar la búsqueda.</strong>
+                    <span>{{ error }}</span>
+                </div>
+            {% endif %}
+
+            <form
+                action="/recomendar"
+                method="post"
+                class="formulario"
+            >
+                <div class="rejilla-principal">
+                    <div class="campo">
+                        <label for="num_jugadores">
+                            Número de jugadores
+                        </label>
+
+                        <p class="ayuda-campo">
+                            Personas que participarán en la partida.
+                        </p>
+
+                        <input
+                            type="number"
+                            id="num_jugadores"
+                            name="num_jugadores"
+                            min="1"
+                            max="20"
+                            required
+                            value="{{ valores.num_jugadores }}"
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="duracion_maxima">
+                            Duración máxima
+                        </label>
+
+                        <p class="ayuda-campo">
+                            Tiempo máximo disponible en minutos.
+                        </p>
+
+                        <div class="entrada-unidad">
+                            <input
+                                type="number"
+                                id="duracion_maxima"
+                                name="duracion_maxima"
+                                min="5"
+                                max="600"
+                                required
+                                value="{{ valores.duracion_maxima }}"
+                            >
+
+                            <span>min</span>
+                        </div>
+                    </div>
+
+                    <div class="campo">
+                        <label for="complejidad_maxima">
+                            Complejidad máxima
+                        </label>
+
+                        <p class="ayuda-campo">
+                            De 1, juego sencillo, a 5, muy complejo.
+                        </p>
+
+                        <select
+                            id="complejidad_maxima"
+                            name="complejidad_maxima"
+                        >
+                            {% for valor, texto in [
+                                (1.5, 'Muy fácil'),
+                                (2.0, 'Ligero'),
+                                (2.5, 'Familiar'),
+                                (3.0, 'Dificultad media'),
+                                (3.5, 'Medio-alto'),
+                                (4.0, 'Complejo'),
+                                (4.5, 'Muy complejo'),
+                                (5.0, 'Sin límite')
+                            ] %}
+                                <option
+                                    value="{{ valor }}"
+                                    {% if valores.complejidad_maxima|float == valor %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ valor }} — {{ texto }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <label class="opcion-destacada">
+                    <input
+                        type="checkbox"
+                        name="solo_rango_recomendado"
+                        {% if valores.solo_rango_recomendado %}
+                            checked
+                        {% endif %}
+                    >
+
+                    <span>
+                        <strong>
+                            Solo juegos recomendados para este
+                            número de jugadores
+                        </strong>
+
+                        <small>
+                            Se utilizarán los votos de la comunidad
+                            de BoardGameGeek.
+                        </small>
+                    </span>
+                </label>
+
+                <details class="grupo-opciones">
+                    <summary>
+                        <span>
+                            <strong>Mecánicas preferidas</strong>
+                            <small>
+                                Selección opcional · puedes marcar varias
+                            </small>
+                        </span>
+
+                        <span class="icono-desplegable">+</span>
+                    </summary>
+
+                    <div class="rejilla-opciones">
+                        {% for nombre, total in mecanicas %}
+                            {% set valor_mecanica = nombre|lower %}
+
+                            <label class="opcion-seleccionable">
+                                <input
+                                    type="checkbox"
+                                    name="mecanicas"
+                                    value="{{ valor_mecanica }}"
+                                    {% if valor_mecanica in valores.mecanicas_seleccionadas %}
+                                        checked
+                                    {% endif %}
+                                >
+
+                                <span>
+                                    <strong>{{ nombre }}</strong>
+                                    <small>{{ total }} juegos</small>
+                                </span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </details>
+
+                <details class="grupo-opciones">
+                    <summary>
+                        <span>
+                            <strong>Categorías o temáticas</strong>
+                            <small>
+                                Selección opcional · puedes marcar varias
+                            </small>
+                        </span>
+
+                        <span class="icono-desplegable">+</span>
+                    </summary>
+
+                    <div class="rejilla-opciones">
+                        {% for nombre, total in categorias %}
+                            {% set valor_categoria = nombre|lower %}
+
+                            <label class="opcion-seleccionable">
+                                <input
+                                    type="checkbox"
+                                    name="categorias"
+                                    value="{{ valor_categoria }}"
+                                    {% if valor_categoria in valores.categorias_seleccionadas %}
+                                        checked
+                                    {% endif %}
+                                >
+
+                                <span>
+                                    <strong>{{ nombre }}</strong>
+                                    <small>{{ total }} juegos</small>
+                                </span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </details>
+
+                <button type="submit" class="boton-principal">
+                    Buscar juegos recomendados
+                </button>
+            </form>
+        </section>
+
+        {% if formulario_enviado %}
+            <section class="seccion-resultados">
+                <div class="titulo-seccion">
+                    <div>
+                        <p class="numero-paso">PASO 2</p>
+                        <h2>Juegos recomendados</h2>
+                    </div>
+
+                    <span class="contador-resultados">
+                        {{ juegos|length }} resultados
+                    </span>
+                </div>
+
+                {% if juegos %}
+                    <div class="rejilla-juegos">
+                        {% for juego in juegos %}
+                            <article class="tarjeta-juego">
+                                <div class="contenedor-imagen">
+                                    {% if juego.imagen_url %}
+                                        <img
+                                            src="{{ juego.imagen_url }}"
+                                            alt="Portada de {{ juego.nombre }}"
+                                            loading="lazy"
+                                        >
+                                    {% else %}
+                                        <div class="sin-imagen">
+                                            Sin imagen
+                                        </div>
+                                    {% endif %}
+
+                                    <span class="posicion">
+                                        #{{ loop.index }}
+                                    </span>
+
+                                    <span class="puntuacion">
+                                        {{ juego.puntuacion }} puntos
+                                    </span>
+                                </div>
+
+                                <div class="contenido-tarjeta">
+                                    <h3>
+                                        <a
+                                            href="/juego/{{ juego.id_bgg }}"
+                                            class="enlace-titulo-juego"
+                                        >
+                                            {{ juego.nombre }}
+                                        </a>
+                                    </h3>
+
+                                    <div class="datos-principales">
+                                        <span>
+                                            👥
+                                            {{ juego.min_jugadores }}–{{ juego.max_jugadores }}
+                                        </span>
+
+                                        <span>
+                                            ⏱
+                                            {{ juego.duracion_minima }}–{{ juego.duracion_maxima }}
+                                            min
+                                        </span>
+
+                                        <span>
+                                            ⚙
+                                            {{ "%.2f"|format(juego.complejidad) }}
+                                        </span>
+
+                                        <span>
+                                            ⭐
+                                            {{ "%.2f"|format(juego.valoracion_media) }}
+                                        </span>
+                                    </div>
+
+                                    <div class="datos-jugadores">
+                                        <p>
+                                            <strong>Rango recomendado:</strong>
+
+                                            {% if juego.min_jugadores_recomendados
+                                                  and juego.max_jugadores_recomendados %}
+                                                {% if juego.min_jugadores_recomendados
+                                                      == juego.max_jugadores_recomendados %}
+                                                    {{ juego.min_jugadores_recomendados }}
+                                                {% else %}
+                                                    {{ juego.min_jugadores_recomendados }}–{{ juego.max_jugadores_recomendados }}
+                                                {% endif %}
+                                            {% else %}
+                                                Sin datos
+                                            {% endif %}
+                                        </p>
+
+                                        <p>
+                                            <strong>Mejor número:</strong>
+
+                                            {% if juego.min_mejor_num_jugadores
+                                                  and juego.max_mejor_num_jugadores %}
+                                                {% if juego.min_mejor_num_jugadores
+                                                      == juego.max_mejor_num_jugadores %}
+                                                    {{ juego.min_mejor_num_jugadores }}
+                                                {% else %}
+                                                    {{ juego.min_mejor_num_jugadores }}–{{ juego.max_mejor_num_jugadores }}
+                                                {% endif %}
+                                            {% else %}
+                                                Sin datos
+                                            {% endif %}
+                                        </p>
+                                    </div>
+
+                                    {% if juego.motivos %}
+                                        <div class="motivos">
+                                            <strong>Por qué encaja</strong>
+
+                                            <ul>
+                                                {% for motivo in juego.motivos %}
+                                                    <li>{{ motivo }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+
+                                    <details class="detalles-juego">
+                                        <summary>
+                                            Ver mecánicas y categorías
+                                        </summary>
+
+                                        <p>
+                                            <strong>Categorías:</strong>
+                                            {{ juego.categorias|join(', ') }}
+                                        </p>
+
+                                        <p>
+                                            <strong>Mecánicas:</strong>
+                                            {{ juego.mecanicas|join(', ') }}
+                                        </p>
+                                    </details>
+
+                                    <div class="acciones-tarjeta">
+                                        <a
+                                            href="/juego/{{ juego.id_bgg }}"
+                                            class="enlace-detalle"
+                                        >
+                                            Ver ficha
+                                        </a>
+
+                                        <a
+                                            href="https://boardgamegeek.com/boardgame/{{ juego.id_bgg }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="enlace-bgg"
+                                        >
+                                            Ver en BGG ↗
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="sin-resultados">
+                        <h3>No se encontraron coincidencias</h3>
+
+                        <p>
+                            Prueba aumentando la duración o la
+                            complejidad máxima, o desactiva el filtro
+                            de rango recomendado.
+                        </p>
+                    </div>
+                {% endif %}
+            </section>
+        {% endif %}
+    </main>
+
+    <footer class="pie">
+        <div class="contenedor">
+            Proyecto local de recomendación de juegos de mesa.
+            Datos obtenidos de BoardGameGeek.
+        </div>
+    </footer>
+</body>
+</html>

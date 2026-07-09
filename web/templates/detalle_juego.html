@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>{{ juego.nombre }} | Recomendador</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera cabecera-detalle">
+        <div class="contenedor">
+            <a href="/" class="enlace-volver">
+                ← Volver al recomendador
+            </a>
+
+            <p class="etiqueta-superior">
+                FICHA DEL JUEGO
+            </p>
+
+            <h1>{{ juego.nombre }}</h1>
+
+            {% if juego.anio_publicacion %}
+                <p class="anio-juego">
+                    Publicado en {{ juego.anio_publicacion }}
+                </p>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        <article class="detalle-juego">
+            <section class="detalle-portada">
+                {% if juego.imagen_url %}
+                    <img
+                        src="{{ juego.imagen_url }}"
+                        alt="Portada de {{ juego.nombre }}"
+                    >
+                {% else %}
+                    <div class="sin-imagen sin-imagen-detalle">
+                        Sin imagen disponible
+                    </div>
+                {% endif %}
+
+                <a
+                    href="https://boardgamegeek.com/boardgame/{{ juego.id_bgg }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="boton-principal enlace-boton"
+                >
+                    Ver en BoardGameGeek ↗
+                </a>
+            </section>
+
+            <section class="detalle-contenido">
+                <div class="rejilla-estadisticas">
+                    <div class="estadistica">
+                        <span>Jugadores oficiales</span>
+
+                        <strong>
+                            {{ juego.min_jugadores }}–{{ juego.max_jugadores }}
+                        </strong>
+                    </div>
+
+                    <div class="estadistica">
+                        <span>Rango recomendado</span>
+
+                        <strong>
+                            {% if juego.min_jugadores_recomendados
+                                  and juego.max_jugadores_recomendados %}
+
+                                {% if juego.min_jugadores_recomendados
+                                      == juego.max_jugadores_recomendados %}
+                                    {{ juego.min_jugadores_recomendados }}
+                                {% else %}
+                                    {{ juego.min_jugadores_recomendados }}–{{ juego.max_jugadores_recomendados }}
+                                {% endif %}
+                            {% else %}
+                                Sin datos
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="estadistica">
+                        <span>Mejor número</span>
+
+                        <strong>
+                            {% if juego.min_mejor_num_jugadores
+                                  and juego.max_mejor_num_jugadores %}
+
+                                {% if juego.min_mejor_num_jugadores
+                                      == juego.max_mejor_num_jugadores %}
+                                    {{ juego.min_mejor_num_jugadores }}
+                                {% else %}
+                                    {{ juego.min_mejor_num_jugadores }}–{{ juego.max_mejor_num_jugadores }}
+                                {% endif %}
+                            {% else %}
+                                Sin datos
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="estadistica">
+                        <span>Duración</span>
+
+                        <strong>
+                            {% if juego.duracion_minima
+                                  and juego.duracion_maxima %}
+                                {{ juego.duracion_minima }}–{{ juego.duracion_maxima }}
+                                min
+                            {% else %}
+                                Sin datos
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="estadistica">
+                        <span>Complejidad</span>
+
+                        <strong>
+                            {% if juego.complejidad is not none %}
+                                {{ "%.2f"|format(juego.complejidad) }} / 5
+                            {% else %}
+                                Sin datos
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="estadistica">
+                        <span>Valoración</span>
+
+                        <strong>
+                            {% if juego.valoracion_media is not none %}
+                                {{ "%.2f"|format(juego.valoracion_media) }} / 10
+                            {% else %}
+                                Sin datos
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="estadistica">
+                        <span>Edad mínima</span>
+
+                        <strong>
+                            {% if juego.edad_minima %}
+                                {{ juego.edad_minima }} años
+                            {% else %}
+                                Sin datos
+                            {% endif %}
+                        </strong>
+                    </div>
+                </div>
+
+                <section class="bloque-detalle">
+                    <h2>Descripción</h2>
+
+                    {% if juego.descripcion %}
+                        <p class="descripcion-juego">
+                            {{ juego.descripcion }}
+                        </p>
+                    {% else %}
+                        <p class="texto-suave">
+                            Este juego no tiene descripción disponible.
+                        </p>
+                    {% endif %}
+                </section>
+
+                <section class="bloque-detalle">
+                    <h2>Categorías</h2>
+
+                    {% if juego.categorias %}
+                        <div class="lista-etiquetas">
+                            {% for categoria in juego.categorias %}
+                                <span>{{ categoria }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="texto-suave">
+                            No hay categorías disponibles.
+                        </p>
+                    {% endif %}
+                </section>
+
+                <section class="bloque-detalle">
+                    <h2>Mecánicas</h2>
+
+                    {% if juego.mecanicas %}
+                        <div class="lista-etiquetas">
+                            {% for mecanica in juego.mecanicas %}
+                                <span>{{ mecanica }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="texto-suave">
+                            No hay mecánicas disponibles.
+                        </p>
+                    {% endif %}
+                </section>
+            </section>
+        </article>
+    </main>
+
+    <footer class="pie">
+        <div class="contenedor">
+            Proyecto local de recomendación de juegos de mesa.
+            Datos obtenidos de BoardGameGeek.
+        </div>
+    </footer>
+</body>
+</html>

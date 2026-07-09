@@ -240,3 +240,70 @@ def obtener_juegos():
     conexion.close()
 
     return juegos
+
+def obtener_detalle_juego(id_bgg):
+    conexion = crear_conexion()
+    conexion.row_factory = sqlite3.Row
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT
+            id_bgg,
+            nombre,
+            descripcion,
+            anio_publicacion,
+            min_jugadores,
+            max_jugadores,
+            min_jugadores_recomendados,
+            max_jugadores_recomendados,
+            min_mejor_num_jugadores,
+            max_mejor_num_jugadores,
+            duracion_minima,
+            duracion_maxima,
+            edad_minima,
+            valoracion_media,
+            complejidad,
+            imagen_url
+        FROM juegos
+        WHERE id_bgg = ?
+    """, (id_bgg,))
+
+    fila = cursor.fetchone()
+
+    if fila is None:
+        conexion.close()
+        return None
+
+    juego = dict(fila)
+
+    cursor.execute("""
+        SELECT c.nombre
+        FROM categorias c
+        JOIN juego_categoria jc
+            ON c.id = jc.categoria_id
+        WHERE jc.juego_id = ?
+        ORDER BY c.nombre
+    """, (id_bgg,))
+
+    juego["categorias"] = [
+        resultado[0]
+        for resultado in cursor.fetchall()
+    ]
+
+    cursor.execute("""
+        SELECT m.nombre
+        FROM mecanicas m
+        JOIN juego_mecanica jm
+            ON m.id = jm.mecanica_id
+        WHERE jm.juego_id = ?
+        ORDER BY m.nombre
+    """, (id_bgg,))
+
+    juego["mecanicas"] = [
+        resultado[0]
+        for resultado in cursor.fetchall()
+    ]
+
+    conexion.close()
+
+    return juego

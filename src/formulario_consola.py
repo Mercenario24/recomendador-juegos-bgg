@@ -1,22 +1,34 @@
-from recomendador_basico import recomendar_juegos, mostrar_recomendaciones
+from opciones_formulario import (
+    obtener_categorias_populares,
+    obtener_mecanicas_populares,
+    seleccionar_opciones
+)
+from recomendador_basico import (
+    recomendar_juegos,
+    mostrar_recomendaciones
+)
 
 
 def pedir_entero(mensaje, minimo=None, maximo=None):
     while True:
-        valor = input(mensaje)
+        valor = input(mensaje).strip()
 
         try:
             numero = int(valor)
         except ValueError:
-            print("Introduce un número válido.")
+            print("Introduce un número entero válido.")
             continue
 
         if minimo is not None and numero < minimo:
-            print(f"El número debe ser mayor o igual que {minimo}.")
+            print(
+                f"El número debe ser mayor o igual que {minimo}."
+            )
             continue
 
         if maximo is not None and numero > maximo:
-            print(f"El número debe ser menor o igual que {maximo}.")
+            print(
+                f"El número debe ser menor o igual que {maximo}."
+            )
             continue
 
         return numero
@@ -24,7 +36,7 @@ def pedir_entero(mensaje, minimo=None, maximo=None):
 
 def pedir_float(mensaje, minimo=None, maximo=None):
     while True:
-        valor = input(mensaje)
+        valor = input(mensaje).strip()
 
         try:
             numero = float(valor.replace(",", "."))
@@ -33,38 +45,86 @@ def pedir_float(mensaje, minimo=None, maximo=None):
             continue
 
         if minimo is not None and numero < minimo:
-            print(f"El número debe ser mayor o igual que {minimo}.")
+            print(
+                f"El número debe ser mayor o igual que {minimo}."
+            )
             continue
 
         if maximo is not None and numero > maximo:
-            print(f"El número debe ser menor o igual que {maximo}.")
+            print(
+                f"El número debe ser menor o igual que {maximo}."
+            )
             continue
 
         return numero
 
 
-def pedir_texto_opcional(mensaje):
-    valor = input(mensaje).strip()
+def pedir_si_no(mensaje, valor_defecto=False):
+    while True:
+        respuesta = input(mensaje).strip().lower()
 
-    if valor == "":
-        return None
+        if respuesta == "":
+            return valor_defecto
 
-    return valor
+        if respuesta in ["s", "si", "sí"]:
+            return True
+
+        if respuesta in ["n", "no"]:
+            return False
+
+        print("Responde con 's' o 'n'.")
 
 
 def explicar_complejidad():
     print("\nComplejidad aproximada:")
-    print("1.0 - 1.5  → Muy fácil")
-    print("1.5 - 2.5  → Familiar / ligero")
-    print("2.5 - 3.5  → Medio")
-    print("3.5 - 4.5  → Complejo")
-    print("4.5 - 5.0  → Muy complejo")
+    print("1.0 - 1.5 → Muy fácil")
+    print("1.5 - 2.5 → Familiar o ligero")
+    print("2.5 - 3.5 → Dificultad media")
+    print("3.5 - 4.5 → Complejo")
+    print("4.5 - 5.0 → Muy complejo")
+
+
+def mostrar_preferencias(
+    num_jugadores,
+    duracion_maxima,
+    complejidad_maxima,
+    mecanicas_preferidas,
+    categorias_preferidas,
+    solo_rango_recomendado
+):
+    print("\n========================================")
+    print(" Preferencias seleccionadas")
+    print("========================================")
+    print(f"Jugadores: {num_jugadores}")
+    print(f"Duración máxima: {duracion_maxima} minutos")
+    print(f"Complejidad máxima: {complejidad_maxima}")
+
+    if solo_rango_recomendado:
+        print("Número de jugadores: debe estar recomendado")
+    else:
+        print("Número de jugadores: basta con estar admitido")
+
+    if mecanicas_preferidas:
+        print(
+            "Mecánicas: "
+            f"{', '.join(mecanicas_preferidas)}"
+        )
+    else:
+        print("Mecánicas: sin preferencia")
+
+    if categorias_preferidas:
+        print(
+            "Categorías: "
+            f"{', '.join(categorias_preferidas)}"
+        )
+    else:
+        print("Categorías: sin preferencia")
 
 
 def main():
-    print("======================================")
-    print(" Recomendador básico de juegos de mesa ")
-    print("======================================")
+    print("========================================")
+    print("  Recomendador de juegos de mesa")
+    print("========================================")
 
     num_jugadores = pedir_entero(
         "\n¿Cuántos jugadores sois? ",
@@ -72,8 +132,14 @@ def main():
         maximo=20
     )
 
+    solo_rango_recomendado = pedir_si_no(
+        "¿Quieres mostrar solo juegos recomendados "
+        "para ese número de jugadores? [s/N]: ",
+        valor_defecto=False
+    )
+
     duracion_maxima = pedir_entero(
-        "¿Duración máxima en minutos? ",
+        "\n¿Cuántos minutos puede durar como máximo? ",
         minimo=5,
         maximo=600
     )
@@ -86,28 +152,40 @@ def main():
         maximo=5.0
     )
 
-    print("\nPuedes escribir parte de una mecánica.")
-    print("Ejemplos: deck, draft, worker, dice, tile, hand, cooperative")
-    print("Si no quieres filtrar por mecánica, pulsa Enter.")
-
-    mecanica_preferida = pedir_texto_opcional(
-        "\n¿Qué mecánica te gustaría? "
+    mecanicas_disponibles = obtener_mecanicas_populares(
+        limite=25
     )
 
-    print("\nPuedes escribir parte de una categoría o temática.")
-    print("Ejemplos: fantasy, science, economic, civilization, adventure, fighting")
-    print("Si no quieres filtrar por categoría, pulsa Enter.")
+    mecanicas_preferidas = seleccionar_opciones(
+        "Mecánicas más frecuentes",
+        mecanicas_disponibles
+    )
 
-    categoria_preferida = pedir_texto_opcional(
-        "\n¿Qué temática/categoría te gustaría? "
+    categorias_disponibles = obtener_categorias_populares(
+        limite=25
+    )
+
+    categorias_preferidas = seleccionar_opciones(
+        "Categorías más frecuentes",
+        categorias_disponibles
+    )
+
+    mostrar_preferencias(
+        num_jugadores=num_jugadores,
+        duracion_maxima=duracion_maxima,
+        complejidad_maxima=complejidad_maxima,
+        mecanicas_preferidas=mecanicas_preferidas,
+        categorias_preferidas=categorias_preferidas,
+        solo_rango_recomendado=solo_rango_recomendado
     )
 
     juegos = recomendar_juegos(
         num_jugadores=num_jugadores,
         duracion_maxima=duracion_maxima,
         complejidad_maxima=complejidad_maxima,
-        mecanica_preferida=mecanica_preferida,
-        categoria_preferida=categoria_preferida,
+        mecanicas_preferidas=mecanicas_preferidas,
+        categorias_preferidas=categorias_preferidas,
+        solo_rango_recomendado=solo_rango_recomendado,
         limite=10
     )
 
