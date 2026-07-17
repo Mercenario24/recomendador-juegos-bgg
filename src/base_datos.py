@@ -6,8 +6,15 @@ RUTA_BD = Path("datos/juegos.db")
 
 
 def crear_conexion():
-    RUTA_BD.parent.mkdir(parents=True, exist_ok=True)
-    return sqlite3.connect(RUTA_BD)
+    RUTA_BD.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    conexion = sqlite3.connect(RUTA_BD)
+    conexion.execute("PRAGMA foreign_keys = ON")
+
+    return conexion
 
 
 def existe_juego(id_bgg):
@@ -144,7 +151,7 @@ def guardar_juego(juego):
     cursor = conexion.cursor()
 
     cursor.execute("""
-        INSERT OR REPLACE INTO juegos (
+        INSERT INTO juegos (
             id_bgg,
             nombre,
             descripcion,
@@ -163,6 +170,27 @@ def guardar_juego(juego):
             imagen_url
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+        ON CONFLICT(id_bgg) DO UPDATE SET
+            nombre = excluded.nombre,
+            descripcion = excluded.descripcion,
+            anio_publicacion = excluded.anio_publicacion,
+            min_jugadores = excluded.min_jugadores,
+            max_jugadores = excluded.max_jugadores,
+            min_jugadores_recomendados =
+                excluded.min_jugadores_recomendados,
+            max_jugadores_recomendados =
+                excluded.max_jugadores_recomendados,
+            min_mejor_num_jugadores =
+                excluded.min_mejor_num_jugadores,
+            max_mejor_num_jugadores =
+                excluded.max_mejor_num_jugadores,
+            duracion_minima = excluded.duracion_minima,
+            duracion_maxima = excluded.duracion_maxima,
+            edad_minima = excluded.edad_minima,
+            valoracion_media = excluded.valoracion_media,
+            complejidad = excluded.complejidad,
+            imagen_url = excluded.imagen_url
     """, (
         juego["id_bgg"],
         juego["nombre"],

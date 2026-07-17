@@ -19,6 +19,53 @@
 <body>
     <header class="cabecera">
         <div class="contenedor">
+            <nav class="navegacion-principal">
+                <a href="/" class="marca-navegacion">
+                    Recomendador BGG
+                </a>
+
+                <div class="acciones-navegacion">
+                    {% if usuario %}
+                        <a
+                            href="/mi-ludoteca"
+                            class="boton-navegacion"
+                        >
+                            Mi ludoteca
+                        </a>
+
+                        <span class="usuario-navegacion">
+                            Hola, {{ usuario.nombre }}
+                        </span>
+
+                        <form
+                            action="/cerrar-sesion"
+                            method="post"
+                        >
+                            <button
+                                type="submit"
+                                class="boton-navegacion boton-salir"
+                            >
+                                Cerrar sesión
+                            </button>
+                        </form>
+                    {% else %}
+                        <a
+                            href="/iniciar-sesion"
+                            class="boton-navegacion"
+                        >
+                            Iniciar sesión
+                        </a>
+
+                        <a
+                            href="/registro"
+                            class="boton-navegacion boton-registro"
+                        >
+                            Crear cuenta
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+
             <p class="etiqueta-superior">
                 BOARDGAME RECOMMENDER
             </p>
@@ -59,24 +106,93 @@
                 class="formulario"
             >
                 <div class="rejilla-principal">
-                    <div class="campo">
-                        <label for="num_jugadores">
-                            Número de jugadores
-                        </label>
+                    <div class="campo campo-jugadores">
+                        <label>Jugadores</label>
 
                         <p class="ayuda-campo">
-                            Personas que participarán en la partida.
+                            Indica un número concreto o un rango de posibles grupos.
                         </p>
 
-                        <input
-                            type="number"
-                            id="num_jugadores"
-                            name="num_jugadores"
-                            min="1"
-                            max="20"
-                            required
-                            value="{{ valores.num_jugadores }}"
+                        <div class="selector-modo-jugadores">
+                            <label class="opcion-modo">
+                                <input
+                                    type="radio"
+                                    name="modo_jugadores"
+                                    value="exacto"
+                                    {% if valores.modo_jugadores == "exacto" %}
+                                        checked
+                                    {% endif %}
+                                >
+
+                                <span>Número exacto</span>
+                            </label>
+
+                            <label class="opcion-modo">
+                                <input
+                                    type="radio"
+                                    name="modo_jugadores"
+                                    value="rango"
+                                    {% if valores.modo_jugadores == "rango" %}
+                                        checked
+                                    {% endif %}
+                                >
+
+                                <span>Rango de jugadores</span>
+                            </label>
+                        </div>
+
+                        <div
+                            id="panel-jugadores-exacto"
+                            class="panel-jugadores"
                         >
+                            <label for="num_jugadores">
+                                Número de jugadores
+                            </label>
+
+                            <input
+                                type="number"
+                                id="num_jugadores"
+                                name="num_jugadores"
+                                min="1"
+                                max="20"
+                                value="{{ valores.num_jugadores }}"
+                            >
+                        </div>
+
+                        <div
+                            id="panel-jugadores-rango"
+                            class="panel-jugadores rango-jugadores"
+                        >
+                            <div class="subcampo">
+                                <label for="num_jugadores_min">
+                                    Desde
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="num_jugadores_min"
+                                    name="num_jugadores_min"
+                                    min="1"
+                                    max="20"
+                                    value="{{ valores.num_jugadores_min }}"
+                                >
+                            </div>
+
+                            <div class="subcampo">
+                                <label for="num_jugadores_max">
+                                    Hasta
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="num_jugadores_max"
+                                    name="num_jugadores_max"
+                                    min="1"
+                                    max="20"
+                                    value="{{ valores.num_jugadores_max }}"
+                                >
+                            </div>
+                        </div>
                     </div>
 
                     <div class="campo">
@@ -137,6 +253,33 @@
                             {% endfor %}
                         </select>
                     </div>
+
+                    <div class="campo">
+                        <label for="limite_resultados">
+                            Juegos a mostrar
+                        </label>
+
+                        <p class="ayuda-campo">
+                            Cantidad máxima de recomendaciones.
+                        </p>
+
+                        <select
+                            id="limite_resultados"
+                            name="limite_resultados"
+                        >
+                            {% for cantidad in [6, 12, 18, 24, 30] %}
+                                <option
+                                    value="{{ cantidad }}"
+                                    {% if valores.limite_resultados|int
+                                        == cantidad %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ cantidad }} juegos
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
 
                 <label class="opcion-destacada">
@@ -150,9 +293,14 @@
 
                     <span>
                         <strong>
-                            Solo juegos recomendados para este
-                            número de jugadores
+                            Solo juegos recomendados para todo el
+                            rango de jugadores
                         </strong>
+
+                        <small>
+                            La comunidad debe recomendar el juego
+                            desde el mínimo hasta el máximo indicado.
+                        </small>
 
                         <small>
                             Se utilizarán los votos de la comunidad
@@ -413,5 +561,61 @@
             Datos obtenidos de BoardGameGeek.
         </div>
     </footer>
+
+    <script>
+        const radiosModoJugadores = document.querySelectorAll(
+            'input[name="modo_jugadores"]'
+        );
+
+        const panelExacto = document.getElementById(
+            "panel-jugadores-exacto"
+        );
+
+        const panelRango = document.getElementById(
+            "panel-jugadores-rango"
+        );
+
+        const inputExacto = document.getElementById(
+            "num_jugadores"
+        );
+
+        const inputMinimo = document.getElementById(
+            "num_jugadores_min"
+        );
+
+        const inputMaximo = document.getElementById(
+            "num_jugadores_max"
+        );
+
+        function actualizarModoJugadores() {
+            const modoSeleccionado = document.querySelector(
+                'input[name="modo_jugadores"]:checked'
+            ).value;
+
+            const esExacto = modoSeleccionado === "exacto";
+
+            panelExacto.hidden = !esExacto;
+            panelRango.hidden = esExacto;
+
+            inputExacto.disabled = !esExacto;
+            inputExacto.required = esExacto;
+
+            inputMinimo.disabled = esExacto;
+            inputMaximo.disabled = esExacto;
+
+            inputMinimo.required = !esExacto;
+            inputMaximo.required = !esExacto;
+        }
+
+        radiosModoJugadores.forEach((radio) => {
+            radio.addEventListener(
+                "change",
+                actualizarModoJugadores
+            );
+        });
+
+        actualizarModoJugadores();
+    </script>
+
 </body>
 </html>

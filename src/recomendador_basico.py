@@ -55,9 +55,42 @@ def obtener_mecanicas_de_juego(cursor, id_bgg):
     return [fila[0] for fila in cursor.fetchall()]
 
 
+def calcular_cobertura_rango(
+    minimo_usuario,
+    maximo_usuario,
+    minimo_juego,
+    maximo_juego
+):
+    if minimo_juego is None or maximo_juego is None:
+        return 0.0
+
+    inicio_coincidencia = max(
+        minimo_usuario,
+        minimo_juego
+    )
+
+    fin_coincidencia = min(
+        maximo_usuario,
+        maximo_juego
+    )
+
+    if fin_coincidencia < inicio_coincidencia:
+        return 0.0
+
+    total_valores_usuario = (
+        maximo_usuario - minimo_usuario + 1
+    )
+
+    total_valores_coincidentes = (
+        fin_coincidencia - inicio_coincidencia + 1
+    )
+
+    return total_valores_coincidentes / total_valores_usuario
+
 def calcular_puntuacion(
     juego,
-    num_jugadores,
+    num_jugadores_min,
+    num_jugadores_max,
     duracion_maxima_usuario,
     complejidad_maxima_usuario,
     mecanicas_preferidas,
@@ -67,41 +100,69 @@ def calcular_puntuacion(
     motivos = []
 
     valoracion = juego["valoracion_media"] or 0
-    duracion = juego["duracion_maxima"] or duracion_maxima_usuario
-    complejidad = juego["complejidad"] or complejidad_maxima_usuario
+    duracion = (
+        juego["duracion_maxima"]
+        or duracion_maxima_usuario
+    )
+    complejidad = (
+        juego["complejidad"]
+        or complejidad_maxima_usuario
+    )
 
-    # Valoración general de BGG
     puntuacion += valoracion * 10
 
-    # El número está dentro del rango oficial
-    if esta_en_rango(
-        num_jugadores,
+    cobertura_oficial = calcular_cobertura_rango(
+        num_jugadores_min,
+        num_jugadores_max,
         juego["min_jugadores"],
         juego["max_jugadores"]
-    ):
-        puntuacion += 10
-        motivos.append("Admite vuestro número de jugadores")
+    )
 
-    # El número está recomendado por la comunidad
-    if esta_en_rango(
-        num_jugadores,
+    if cobertura_oficial == 1:
+        puntuacion += 10
+        motivos.append(
+            "admite todo el rango de jugadores indicado"
+        )
+
+    cobertura_recomendada = calcular_cobertura_rango(
+        num_jugadores_min,
+        num_jugadores_max,
         juego["min_jugadores_recomendados"],
         juego["max_jugadores_recomendados"]
-    ):
-        puntuacion += 20
-        motivos.append("La comunidad lo recomienda para vuestro grupo")
+    )
 
-    # El número coincide con el mejor número de jugadores
-    if esta_en_rango(
-        num_jugadores,
+    puntuacion += 20 * cobertura_recomendada
+
+    if cobertura_recomendada == 1:
+        motivos.append(
+            "la comunidad lo recomienda para todo el rango"
+        )
+    elif cobertura_recomendada > 0:
+        motivos.append(
+            "la comunidad lo recomienda para parte del rango"
+        )
+
+    cobertura_mejor_numero = calcular_cobertura_rango(
+        num_jugadores_min,
+        num_jugadores_max,
         juego["min_mejor_num_jugadores"],
         juego["max_mejor_num_jugadores"]
-    ):
-        puntuacion += 30
-        motivos.append("Coincide con su mejor número de jugadores")
+    )
 
-    # Cuanto más cerca esté de la duración máxima, más puntos
-    diferencia_duracion = duracion_maxima_usuario - duracion
+    puntuacion += 30 * cobertura_mejor_numero
+
+    if cobertura_mejor_numero == 1:
+        motivos.append(
+            "todo el rango coincide con su mejor número"
+        )
+    elif cobertura_mejor_numero > 0:
+        motivos.append(
+            "parte del rango coincide con su mejor número"
+        )
+
+    diferencia_duracion = (
+        duracion_maxima_usuario - duracion
+    )
 
     if diferencia_duracion >= 0:
         puntos_duracion = max(
@@ -112,9 +173,8 @@ def calcular_puntuacion(
         puntuacion += puntos_duracion
 
         if diferencia_duracion <= 30:
-            motivos.append("Su duración encaja bien")
+            motivos.append("su duración encaja bien")
 
-    # Cuanto más cerca esté de la complejidad máxima, más puntos
     diferencia_complejidad = (
         complejidad_maxima_usuario - complejidad
     )
@@ -128,7 +188,7 @@ def calcular_puntuacion(
         puntuacion += puntos_complejidad
 
         if diferencia_complejidad <= 0.5:
-            motivos.append("Su complejidad encaja bien")
+            motivos.append("su complejidad encaja bien")
 
     mecanicas_juego = " ".join(
         juego["mecanicas"]
@@ -139,33 +199,55 @@ def calcular_puntuacion(
     ).lower()
 
     for mecanica in mecanicas_preferidas:
-        if mecanica in mecanicas_juego:
+        if mecanica.lower() in mecanicas_juego:
             puntuacion += 12
             motivos.append(
-                f"Include la mecánica '{mecanica}'"
+                f"incluye la mecánica '{mecanica}'"
             )
 
     for categoria in categorias_preferidas:
-        if categoria in categorias_juego:
+        if categoria.lower() in categorias_juego:
             puntuacion += 10
             motivos.append(
-                f"Include la categoría '{categoria}'"
+                f"incluye la categoría '{categoria}'"
             )
 
     return round(puntuacion, 2), motivos
 
-
 def recomendar_juegos(
-    num_jugadores,
-    duracion_maxima,
-    complejidad_maxima,
+    num_jugadores=None,
+    duracion_maxima=120,
+    complejidad_maxima=3.5,
     mecanicas_preferidas=None,
     categorias_preferidas=None,
     solo_rango_recomendado=False,
-    limite=10
+    limite=10,
+    num_jugadores_min=None,
+    num_jugadores_max=None
 ):
     mecanicas_preferidas = mecanicas_preferidas or []
     categorias_preferidas = categorias_preferidas or []
+
+    # Mantiene compatibilidad con el formulario por consola.
+    if num_jugadores_min is None:
+        num_jugadores_min = num_jugadores
+
+    if num_jugadores_max is None:
+        num_jugadores_max = num_jugadores
+
+    if num_jugadores_min is None:
+        raise ValueError(
+            "Debes indicar el número mínimo de jugadores."
+        )
+
+    if num_jugadores_max is None:
+        num_jugadores_max = num_jugadores_min
+
+    if num_jugadores_min > num_jugadores_max:
+        raise ValueError(
+            "El número mínimo de jugadores no puede "
+            "ser mayor que el máximo."
+        )
 
     conexion = crear_conexion()
     cursor = conexion.cursor()
@@ -194,8 +276,8 @@ def recomendar_juegos(
         ORDER BY valoracion_media DESC
         LIMIT 1000
     """, (
-        num_jugadores,
-        num_jugadores,
+        num_jugadores_min,
+        num_jugadores_max,
         duracion_maxima,
         complejidad_maxima
     ))
@@ -220,13 +302,17 @@ def recomendar_juegos(
             imagen_url
         ) = fila
 
-        numero_recomendado = esta_en_rango(
-            num_jugadores,
+        cobertura_recomendada = calcular_cobertura_rango(
+            num_jugadores_min,
+            num_jugadores_max,
             min_jugadores_recomendados,
             max_jugadores_recomendados
         )
 
-        if solo_rango_recomendado and not numero_recomendado:
+        if (
+            solo_rango_recomendado
+            and cobertura_recomendada < 1
+        ):
             continue
 
         juego = {
@@ -259,7 +345,8 @@ def recomendar_juegos(
 
         puntuacion, motivos = calcular_puntuacion(
             juego=juego,
-            num_jugadores=num_jugadores,
+            num_jugadores_min=num_jugadores_min,
+            num_jugadores_max=num_jugadores_max,
             duracion_maxima_usuario=duracion_maxima,
             complejidad_maxima_usuario=complejidad_maxima,
             mecanicas_preferidas=mecanicas_preferidas,

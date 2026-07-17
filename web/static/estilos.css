@@ -132,7 +132,7 @@ select {
 
 .rejilla-principal {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 18px;
 }
 
@@ -519,6 +519,10 @@ select:focus {
     .rejilla-opciones {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .rejilla-principal {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 720px) {
@@ -725,5 +729,359 @@ select:focus {
 @media (max-width: 650px) {
     .rejilla-estadisticas {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.rango-jugadores {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.subcampo {
+    display: grid;
+    gap: 6px;
+}
+
+.subcampo span {
+    color: var(--texto-suave);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.campo-jugadores {
+    grid-column: span 2;
+}
+
+.selector-modo-jugadores {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.opcion-modo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+}
+
+.opcion-modo:has(input:checked) {
+    border-color: var(--primario);
+    background: var(--primario-claro);
+}
+
+.opcion-modo input {
+    accent-color: var(--primario);
+}
+
+.opcion-modo span {
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.panel-jugadores {
+    padding: 14px;
+    border: 1px solid var(--borde);
+    border-radius: 11px;
+    background: var(--superficie-secundaria);
+}
+
+.panel-jugadores > label {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--texto-suave);
+    font-size: 0.78rem;
+}
+
+.panel-jugadores[hidden] {
+    display: none;
+}
+
+.rango-jugadores {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.subcampo {
+    display: grid;
+    gap: 6px;
+}
+
+.subcampo label {
+    color: var(--texto-suave);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+@media (max-width: 720px) {
+    .campo-jugadores {
+        grid-column: span 1;
+    }
+
+    .selector-modo-jugadores {
+        grid-template-columns: 1fr;
+    }
+}
+
+.navegacion-principal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 48px;
+}
+
+.marca-navegacion {
+    color: white;
+    font-weight: 850;
+    text-decoration: none;
+}
+
+.acciones-navegacion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.acciones-navegacion form {
+    margin: 0;
+}
+
+.usuario-navegacion {
+    margin-right: 6px;
+    color: #d4e6dc;
+    font-size: 0.9rem;
+}
+
+.boton-navegacion {
+    display: inline-flex;
+    min-height: 38px;
+    align-items: center;
+    padding: 0 14px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 9px;
+    background: transparent;
+    color: white;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 750;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.boton-navegacion:hover {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.boton-registro {
+    border-color: white;
+    background: white;
+    color: var(--primario-oscuro);
+}
+
+.boton-registro:hover {
+    background: #e5eee9;
+    color: var(--primario-oscuro);
+}
+
+.boton-salir {
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.pagina-autenticacion {
+    min-height: 100vh;
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(39, 93, 71, 0.14),
+            transparent 38%
+        ),
+        var(--fondo);
+}
+
+.contenedor-autenticacion {
+    display: grid;
+    min-height: 100vh;
+    padding: 40px 20px;
+    place-items: center;
+}
+
+.tarjeta-autenticacion {
+    width: min(100%, 500px);
+    padding: 36px;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    background: var(--superficie);
+    box-shadow: var(--sombra);
+}
+
+.tarjeta-autenticacion h1 {
+    margin: 0;
+    font-size: 2rem;
+    letter-spacing: -0.035em;
+}
+
+.volver-autenticacion {
+    display: inline-block;
+    margin-bottom: 32px;
+    color: var(--primario);
+    font-size: 0.88rem;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.volver-autenticacion:hover {
+    text-decoration: underline;
+}
+
+.descripcion-autenticacion {
+    margin: 12px 0 26px;
+    color: var(--texto-suave);
+}
+
+.formulario-autenticacion {
+    display: grid;
+    gap: 18px;
+}
+
+.formulario-autenticacion input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--borde);
+    border-radius: 11px;
+}
+
+.formulario-autenticacion input:focus {
+    border-color: var(--primario);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(39, 93, 71, 0.12);
+}
+
+.texto-ayuda {
+    margin-top: 6px;
+    color: var(--texto-suave);
+}
+
+.cambio-autenticacion {
+    margin: 24px 0 0;
+    color: var(--texto-suave);
+    text-align: center;
+}
+
+.cambio-autenticacion a {
+    color: var(--primario);
+    font-weight: 750;
+}
+
+@media (max-width: 650px) {
+    .navegacion-principal {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .acciones-navegacion {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .usuario-navegacion {
+        width: 100%;
+    }
+
+    .tarjeta-autenticacion {
+        padding: 26px 20px;
+    }
+}
+
+.cabecera-ludoteca {
+    padding-top: 48px;
+}
+
+.panel-importacion {
+    margin-bottom: 36px;
+}
+
+.formulario-importacion {
+    display: grid;
+    gap: 18px;
+    margin-top: 24px;
+}
+
+.selector-archivo {
+    display: grid;
+    gap: 10px;
+    padding: 20px;
+    border: 2px dashed var(--borde);
+    border-radius: 13px;
+    background: var(--superficie-secundaria);
+    cursor: pointer;
+}
+
+.selector-archivo:hover {
+    border-color: var(--primario);
+}
+
+.selector-archivo > span {
+    font-weight: 750;
+}
+
+.selector-archivo input {
+    width: 100%;
+}
+
+.mensaje-exito,
+.mensaje-aviso {
+    margin-bottom: 22px;
+    padding: 16px;
+    border-radius: 11px;
+}
+
+.mensaje-exito {
+    border: 1px solid #9cc7ad;
+    background: #e6f4eb;
+    color: #24583b;
+}
+
+.mensaje-aviso {
+    border: 1px solid #ddc381;
+    background: #fff5d7;
+    color: #72550e;
+}
+
+.ultima-importacion {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--borde);
+    color: var(--texto-suave);
+    font-size: 0.85rem;
+}
+
+.datos-ludoteca {
+    margin: 14px 0;
+    padding: 11px;
+    border-left: 3px solid var(--primario);
+    background: var(--primario-claro);
+}
+
+.datos-ludoteca p {
+    margin: 3px 0;
+    font-size: 0.84rem;
+}
+
+@media (max-width: 650px) {
+    .ultima-importacion {
+        flex-direction: column;
     }
 }

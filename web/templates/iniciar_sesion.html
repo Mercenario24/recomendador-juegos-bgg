@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Iniciar sesión | Recomendador BGG</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body class="pagina-autenticacion">
+    <main class="contenedor-autenticacion">
+        <section class="tarjeta-autenticacion">
+            <a href="/" class="volver-autenticacion">
+                ← Volver al recomendador
+            </a>
+
+            <p class="numero-paso">ACCESO</p>
+
+            <h1>Iniciar sesión</h1>
+
+            <p class="descripcion-autenticacion">
+                Accede a tu cuenta para gestionar tu ludoteca.
+            </p>
+
+            {% if error %}
+                <div class="mensaje-error">
+                    <strong>No se pudo iniciar sesión</strong>
+                    <span>{{ error }}</span>
+                </div>
+            {% endif %}
+
+            <form
+                action="/iniciar-sesion"
+                method="post"
+                class="formulario-autenticacion"
+            >
+                <div class="campo">
+                    <label for="email">
+                        Correo electrónico
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        autocomplete="email"
+                        value="{{ email }}"
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="contrasena">
+                        Contraseña
+                    </label>
+
+                    <input
+                        type="password"
+                        id="contrasena"
+                        name="contrasena"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="boton-principal"
+                >
+                    Iniciar sesión
+                </button>
+            </form>
+
+            <p class="cambio-autenticacion">
+                ¿Todavía no tienes cuenta?
+
+                <a href="/registro">
+                    Regístrate
+                </a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>
