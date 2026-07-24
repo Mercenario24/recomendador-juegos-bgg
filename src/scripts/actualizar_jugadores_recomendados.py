@@ -1,12 +1,21 @@
 import time
 
-from base_datos import (
+import sys
+from pathlib import Path
+
+
+RUTA_SRC = Path(__file__).resolve().parents[1]
+
+if str(RUTA_SRC) not in sys.path:
+    sys.path.insert(0, str(RUTA_SRC))
+
+from app.database.base_datos import (
     crear_conexion,
     crear_tablas,
     guardar_juego
 )
-from bgg_api import obtener_juegos_por_ids
-from parser_bgg import parsear_juegos
+from app.services.bgg_api import obtener_juegos_por_ids
+from app.services.parser_bgg import parsear_juegos
 
 
 TAMANO_LOTE = 20

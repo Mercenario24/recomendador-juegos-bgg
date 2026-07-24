@@ -1,4 +1,4 @@
-from base_datos import crear_conexion
+from app.database.base_datos import crear_conexion
 
 
 def limpiar_lista_texto(texto):
@@ -223,12 +223,13 @@ def recomendar_juegos(
     solo_rango_recomendado=False,
     limite=10,
     num_jugadores_min=None,
-    num_jugadores_max=None
+    num_jugadores_max=None,
+    usuario_id=None,
+    solo_ludoteca=False
 ):
     mecanicas_preferidas = mecanicas_preferidas or []
     categorias_preferidas = categorias_preferidas or []
 
-    # Mantiene compatibilidad con el formulario por consola.
     if num_jugadores_min is None:
         num_jugadores_min = num_jugadores
 
@@ -245,42 +246,71 @@ def recomendar_juegos(
 
     if num_jugadores_min > num_jugadores_max:
         raise ValueError(
-            "El número mínimo de jugadores no puede "
-            "ser mayor que el máximo."
+            "El número mínimo de jugadores no puede ser mayor que el máximo."
+        )
+
+    if solo_ludoteca and usuario_id is None:
+        raise ValueError(
+            "Para buscar solo en la ludoteca debes iniciar sesión."
         )
 
     conexion = crear_conexion()
     cursor = conexion.cursor()
 
-    cursor.execute("""
+    consulta = """
         SELECT
-            id_bgg,
-            nombre,
-            min_jugadores,
-            max_jugadores,
-            min_jugadores_recomendados,
-            max_jugadores_recomendados,
-            min_mejor_num_jugadores,
-            max_mejor_num_jugadores,
-            duracion_minima,
-            duracion_maxima,
-            complejidad,
-            valoracion_media,
-            imagen_url
-        FROM juegos
-        WHERE min_jugadores <= ?
-          AND max_jugadores >= ?
-          AND duracion_maxima <= ?
-          AND complejidad <= ?
-          AND valoracion_media IS NOT NULL
-        ORDER BY valoracion_media DESC
-        LIMIT 1000
-    """, (
+            j.id_bgg,
+            j.nombre,
+            j.min_jugadores,
+            j.max_jugadores,
+            j.min_jugadores_recomendados,
+            j.max_jugadores_recomendados,
+            j.min_mejor_num_jugadores,
+            j.max_mejor_num_jugadores,
+            j.duracion_minima,
+            j.duracion_maxima,
+            j.complejidad,
+            j.valoracion_media,
+            j.imagen_url
+        FROM juegos j
+    """
+
+    parametros = []
+
+    if solo_ludoteca:
+        consulta += """
+            JOIN ludoteca_usuario lu
+                ON j.id_bgg = lu.juego_id
+        """
+
+    consulta += """
+        WHERE j.min_jugadores <= ?
+          AND j.max_jugadores >= ?
+          AND j.duracion_maxima <= ?
+          AND j.complejidad <= ?
+          AND j.valoracion_media IS NOT NULL
+    """
+
+    parametros.extend([
         num_jugadores_min,
         num_jugadores_max,
         duracion_maxima,
         complejidad_maxima
-    ))
+    ])
+
+    if solo_ludoteca:
+        consulta += """
+          AND lu.usuario_id = ?
+        """
+
+        parametros.append(usuario_id)
+
+    consulta += """
+        ORDER BY j.valoracion_media DESC
+        LIMIT 1000
+    """
+
+    cursor.execute(consulta, parametros)
 
     filas = cursor.fetchall()
     juegos = []
@@ -309,10 +339,7 @@ def recomendar_juegos(
             max_jugadores_recomendados
         )
 
-        if (
-            solo_rango_recomendado
-            and cobertura_recomendada < 1
-        ):
+        if solo_rango_recomendado and cobertura_recomendada < 1:
             continue
 
         juego = {
@@ -352,6 +379,12 @@ def recomendar_juegos(
             mecanicas_preferidas=mecanicas_preferidas,
             categorias_preferidas=categorias_preferidas
         )
+
+        if solo_ludoteca:
+            motivos.insert(
+                0,
+                "está en tu ludoteca"
+            )
 
         juego["puntuacion"] = puntuacion
         juego["motivos"] = motivos

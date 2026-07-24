@@ -241,9 +241,21 @@
                                         </strong>
 
                                         {% if juego.valoracion_usuario is not none %}
-                                            {{ juego.valoracion_usuario }}
+                                            {{ "%.2f"|format(juego.valoracion_usuario) }} / 10
                                         {% else %}
                                             Sin valorar
+                                        {% endif %}
+                                    </p>
+
+                                    <p>
+                                        <strong>
+                                            Valoración media BGG:
+                                        </strong>
+
+                                        {% if juego.valoracion_media is not none %}
+                                            {{ "%.2f"|format(juego.valoracion_media) }} / 10
+                                        {% else %}
+                                            Sin datos
                                         {% endif %}
                                     </p>
 

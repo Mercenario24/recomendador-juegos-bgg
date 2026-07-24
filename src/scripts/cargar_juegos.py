@@ -2,10 +2,22 @@ import csv
 import time
 from pathlib import Path
 
-from bgg_api import obtener_juegos_por_ids
-from parser_bgg import parsear_juegos
-from base_datos import crear_tablas, guardar_juego, existe_juego
+import sys
+from pathlib import Path
 
+
+RUTA_SRC = Path(__file__).resolve().parents[1]
+
+if str(RUTA_SRC) not in sys.path:
+    sys.path.insert(0, str(RUTA_SRC))
+
+from app.services.bgg_api import obtener_juegos_por_ids
+from app.services.parser_bgg import parsear_juegos
+from app.database.base_datos import (
+    crear_tablas,
+    guardar_juego,
+    existe_juego
+)
 
 RUTA_CSV = Path("datos/ids_juegos.csv")
 TAMANO_LOTE = 20

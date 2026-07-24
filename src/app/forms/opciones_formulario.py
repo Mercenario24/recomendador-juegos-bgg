@@ -1,4 +1,4 @@
-from base_datos import crear_conexion
+from app.database.base_datos import crear_conexion
 
 
 def obtener_mecanicas_populares(limite=25):

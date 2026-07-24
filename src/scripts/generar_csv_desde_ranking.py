@@ -1,6 +1,15 @@
 import csv
 from pathlib import Path
 
+import sys
+from pathlib import Path
+
+
+RUTA_SRC = Path(__file__).resolve().parents[1]
+
+if str(RUTA_SRC) not in sys.path:
+    sys.path.insert(0, str(RUTA_SRC))
+
 
 RUTA_RANKING = Path("datos/bgg_ranking.csv")
 RUTA_SALIDA = Path("datos/ids_juegos.csv")

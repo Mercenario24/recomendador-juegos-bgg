@@ -1,6 +1,6 @@
 import sqlite3
 
-from base_datos import crear_conexion
+from app.database.base_datos import crear_conexion
 
 
 def crear_tablas_ludoteca():

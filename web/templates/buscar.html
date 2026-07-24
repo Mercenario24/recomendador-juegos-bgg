@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Búsqueda de juegos | Recomendador BGG</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera cabecera-ludoteca">
+        <div class="contenedor">
+            <nav class="navegacion-principal">
+                <a href="/" class="marca-navegacion">
+                    Recomendador BGG
+                </a>
+
+                <div class="acciones-navegacion">
+                    <a href="/" class="boton-navegacion">
+                        Recomendador
+                    </a>
+
+                    {% if usuario %}
+                        <a
+                            href="/mi-ludoteca"
+                            class="boton-navegacion"
+                        >
+                            Mi ludoteca
+                        </a>
+
+                        <span class="usuario-navegacion">
+                            {{ usuario.nombre }}
+                        </span>
+
+                        <form
+                            action="/cerrar-sesion"
+                            method="post"
+                        >
+                            <button
+                                type="submit"
+                                class="boton-navegacion"
+                            >
+                                Cerrar sesión
+                            </button>
+                        </form>
+                    {% else %}
+                        <a
+                            href="/iniciar-sesion"
+                            class="boton-navegacion"
+                        >
+                            Iniciar sesión
+                        </a>
+
+                        <a
+                            href="/registro"
+                            class="boton-navegacion boton-registro"
+                        >
+                            Crear cuenta
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+
+            <p class="etiqueta-superior">
+                BUSCADOR
+            </p>
+
+            <h1>Buscar juegos por nombre</h1>
+
+            <p class="descripcion-cabecera">
+                Encuentra cualquier juego guardado en el catálogo
+                o busca únicamente dentro de tu ludoteca.
+            </p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        <section class="panel-formulario">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="numero-paso">
+                        BÚSQUEDA
+                    </p>
+
+                    <h2>Nombre del juego</h2>
+                </div>
+
+                {% if q %}
+                    <span class="contador-resultados">
+                        {{ total_resultados }} resultados
+                    </span>
+                {% endif %}
+            </div>
+
+            {% if error %}
+                <div class="mensaje-error">
+                    <strong>No se pudo buscar</strong>
+                    <span>{{ error }}</span>
+                </div>
+            {% endif %}
+
+            <form
+                action="/buscar"
+                method="get"
+                class="formulario-busqueda"
+            >
+                <div class="campo-busqueda">
+                    <input
+                        type="search"
+                        name="q"
+                        placeholder="Ejemplo: Terraforming, Catan, Azul..."
+                        value="{{ q }}"
+                        required
+                    >
+
+                    <button
+                        type="submit"
+                        class="boton-principal"
+                    >
+                        Buscar
+                    </button>
+                </div>
+
+                <label class="opcion-destacada opcion-busqueda-ludoteca">
+                    <input
+                        type="checkbox"
+                        name="solo_ludoteca"
+                        value="true"
+                        {% if solo_ludoteca %}
+                            checked
+                        {% endif %}
+                        {% if not usuario %}
+                            disabled
+                        {% endif %}
+                    >
+
+                    <span>
+                        <strong>
+                            Buscar solo en mi ludoteca
+                        </strong>
+
+                        <small>
+                            {% if usuario %}
+                                Solo aparecerán juegos que hayas importado.
+                            {% else %}
+                                Inicia sesión para activar esta opción.
+                            {% endif %}
+                        </small>
+                    </span>
+                </label>
+            </form>
+        </section>
+
+        {% if q and not error %}
+            <section class="seccion-resultados">
+                <div class="titulo-seccion">
+                    <div>
+                        <p class="numero-paso">
+                            RESULTADOS
+                        </p>
+
+                        <h2>
+                            Resultados para “{{ q }}”
+                        </h2>
+
+                        {% if solo_ludoteca %}
+                            <p class="texto-suave">
+                                Buscando solo en tu ludoteca.
+                            </p>
+                        {% else %}
+                            <p class="texto-suave">
+                                Buscando en todo el catálogo.
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <span class="contador-resultados">
+                        {{ total_resultados }} juegos
+                    </span>
+                </div>
+
+                {% if juegos %}
+                    <div class="rejilla-juegos">
+                        {% for juego in juegos %}
+                            <article class="tarjeta-juego">
+                                <div class="contenedor-imagen">
+                                    {% if juego.imagen_url %}
+                                        <img
+                                            src="{{ juego.imagen_url }}"
+                                            alt="Portada de {{ juego.nombre }}"
+                                            loading="lazy"
+                                        >
+                                    {% else %}
+                                        <div class="sin-imagen">
+                                            Sin imagen
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="contenido-tarjeta">
+                                    <h3>
+                                        <a
+                                            href="/juego/{{ juego.id_bgg }}"
+                                            class="enlace-titulo-juego"
+                                        >
+                                            {{ juego.nombre }}
+                                        </a>
+                                    </h3>
+
+                                    {% if juego.anio_publicacion %}
+                                        <p class="texto-suave">
+                                            Publicado en {{ juego.anio_publicacion }}
+                                        </p>
+                                    {% endif %}
+
+                                    <div class="datos-principales">
+                                        <span>
+                                            👥
+                                            {{ juego.min_jugadores }}–{{ juego.max_jugadores }}
+                                        </span>
+
+                                        <span>
+                                            ⏱
+                                            {{ juego.duracion_minima }}–{{ juego.duracion_maxima }}
+                                            min
+                                        </span>
+
+                                        {% if juego.complejidad is not none %}
+                                            <span>
+                                                ⚙
+                                                {{ "%.2f"|format(juego.complejidad) }}
+                                            </span>
+                                        {% endif %}
+
+                                        {% if juego.valoracion_media is not none %}
+                                            <span>
+                                                ⭐
+                                                {{ "%.2f"|format(juego.valoracion_media) }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="acciones-tarjeta">
+                                        <a
+                                            href="/juego/{{ juego.id_bgg }}"
+                                            class="enlace-detalle"
+                                        >
+                                            Ver ficha
+                                        </a>
+
+                                        <a
+                                            href="https://boardgamegeek.com/boardgame/{{ juego.id_bgg }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="enlace-bgg"
+                                        >
+                                            Ver en BGG ↗
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="sin-resultados">
+                        <h3>No se encontraron juegos</h3>
+
+                        <p>
+                            Prueba con otro nombre o con una búsqueda
+                            más corta.
+                        </p>
+                    </div>
+                {% endif %}
+            </section>
+        {% endif %}
+    </main>
+</body>
+</html>

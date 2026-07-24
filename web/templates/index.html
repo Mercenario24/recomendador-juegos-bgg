@@ -66,6 +66,23 @@
                 </div>
             </nav>
 
+            <form
+                action="/buscar"
+                method="get"
+                class="buscador-cabecera"
+            >
+                <input
+                    type="search"
+                    name="q"
+                    placeholder="Buscar juego por nombre..."
+                    required
+                >
+
+                <button type="submit">
+                    Buscar
+                </button>
+            </form>
+
             <p class="etiqueta-superior">
                 BOARDGAME RECOMMENDER
             </p>
@@ -309,6 +326,35 @@
                     </span>
                 </label>
 
+                <label class="opcion-destacada">
+                    <input
+                        type="checkbox"
+                        name="solo_ludoteca"
+                        {% if valores.solo_ludoteca %}
+                            checked
+                        {% endif %}
+                        {% if not usuario %}
+                            disabled
+                        {% endif %}
+                    >
+
+                    <span>
+                        <strong>
+                            Recomendar solo juegos de mi ludoteca
+                        </strong>
+
+                        <small>
+                            {% if usuario %}
+                                El recomendador buscará únicamente entre los juegos
+                                que hayas importado en tu colección.
+                            {% else %}
+                                Inicia sesión e importa tu colección para activar
+                                esta opción.
+                            {% endif %}
+                        </small>
+                    </span>
+                </label>
+
                 <details class="grupo-opciones">
                     <summary>
                         <span>
@@ -391,6 +437,15 @@
                     <div>
                         <p class="numero-paso">PASO 2</p>
                         <h2>Juegos recomendados</h2>
+                        {% if valores.solo_ludoteca %}
+                            <p class="texto-suave">
+                                Mostrando recomendaciones solo de tu ludoteca.
+                            </p>
+                        {% else %}
+                            <p class="texto-suave">
+                                Mostrando recomendaciones de todo el catálogo.
+                            </p>
+                        {% endif %}
                     </div>
 
                     <span class="contador-resultados">

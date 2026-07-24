@@ -11,13 +11,27 @@ from fastapi import (
     UploadFile
 )
 
-from base_datos import (
+from app.forms.opciones_formulario import (
+    obtener_categorias_populares,
+    obtener_mecanicas_populares
+)
+
+from app.services.recomendador_basico import recomendar_juegos
+
+from app.database.base_datos import (
+    buscar_juegos_por_nombre,
     guardar_juego,
     obtener_detalle_juego
 )
-from bgg_api import obtener_juegos_por_ids
-from importador_ludoteca import leer_archivo_ludoteca
-from ludoteca import (
+
+from app.auth.usuarios import (
+    autenticar_usuario,
+    crear_tabla_usuarios,
+    obtener_usuario_por_id,
+    registrar_usuario
+)
+
+from app.library.ludoteca import (
     crear_tablas_ludoteca,
     guardar_ludoteca_usuario,
     obtener_ids_juegos_existentes,
@@ -26,7 +40,10 @@ from ludoteca import (
     obtener_ultima_importacion,
     registrar_importacion
 )
-from parser_bgg import parsear_juegos
+
+from app.services.bgg_api import obtener_juegos_por_ids
+from app.services.parser_bgg import parsear_juegos
+from app.services.importador_ludoteca import leer_archivo_ludoteca
 
 from dotenv import load_dotenv
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -37,24 +54,12 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from opciones_formulario import (
-    obtener_categorias_populares,
-    obtener_mecanicas_populares
+
+from app.config import (
+    RUTA_PLANTILLAS,
+    RUTA_STATIC
 )
 
-from usuarios import (
-    autenticar_usuario,
-    crear_tabla_usuarios,
-    obtener_usuario_por_id,
-    registrar_usuario
-)
-
-from recomendador_basico import recomendar_juegos
-
-
-
-RUTA_RAIZ = Path(__file__).resolve().parent.parent
-load_dotenv(RUTA_RAIZ / ".env")
 
 CLAVE_SESION = os.getenv("SESSION_SECRET")
 
@@ -63,8 +68,6 @@ if not CLAVE_SESION:
         "No se ha encontrado SESSION_SECRET en el archivo .env."
     )
 
-RUTA_PLANTILLAS = RUTA_RAIZ / "web" / "templates"
-RUTA_STATIC = RUTA_RAIZ / "web" / "static"
 
 
 app = FastAPI(
@@ -323,6 +326,7 @@ def obtener_valores_iniciales():
         "complejidad_maxima": 3.5,
         "limite_resultados": 12,
         "solo_rango_recomendado": False,
+        "solo_ludoteca": False,
         "mecanicas_seleccionadas": [],
         "categorias_seleccionadas": []
     }
@@ -603,6 +607,7 @@ async def cerrar_sesion(request: Request):
 
 @app.post("/recomendar", response_class=HTMLResponse)
 async def procesar_recomendacion(request: Request):
+    usuario = obtener_usuario_actual(request)
     formulario = await request.form()
 
     mecanicas_disponibles, categorias_disponibles = obtener_opciones()
@@ -648,6 +653,8 @@ async def procesar_recomendacion(request: Request):
         ),
         "solo_rango_recomendado":
             formulario.get("solo_rango_recomendado") == "on",
+        "solo_ludoteca": 
+            formulario.get("solo_ludoteca") == "on",
         "mecanicas_seleccionadas":
             mecanicas_seleccionadas,
         "categorias_seleccionadas":
@@ -720,7 +727,8 @@ async def procesar_recomendacion(request: Request):
             12,
             18,
             24,
-            30
+            30,
+            60
         }
 
         if limite_resultados not in limites_permitidos:
@@ -728,6 +736,11 @@ async def procesar_recomendacion(request: Request):
                 "La cantidad de resultados seleccionada "
                 "no es válida."
             )
+
+        if valores["solo_ludoteca"] and usuario is None:
+            raise ValueError(
+                "Debes iniciar sesión para recomendar juegos de tu ludoteca."
+         )       
         
         valores["modo_jugadores"] = modo_jugadores
         valores["num_jugadores_min"] = num_jugadores_min
@@ -761,7 +774,9 @@ async def procesar_recomendacion(request: Request):
             solo_rango_recomendado=valores[
                 "solo_rango_recomendado"
             ],
-            limite=limite_resultados
+            limite=limite_resultados,
+            usuario_id=usuario["id"] if usuario else None,
+            solo_ludoteca=valores["solo_ludoteca"]
         )
 
         contexto = crear_contexto(
@@ -796,6 +811,53 @@ async def procesar_recomendacion(request: Request):
         request=request,
         name="index.html",
         context=contexto
+    )
+
+@app.get("/buscar", response_class=HTMLResponse)
+async def buscar_juegos(
+    request: Request,
+    q: str = "",
+    solo_ludoteca: bool = False
+):
+    usuario = obtener_usuario_actual(request)
+
+    texto_busqueda = q.strip()
+
+    error = None
+    juegos = []
+
+    if not texto_busqueda:
+        error = "Introduce un nombre de juego para buscar."
+
+    elif len(texto_busqueda) < 2:
+        error = "La búsqueda debe tener al menos 2 caracteres."
+
+    elif solo_ludoteca and usuario is None:
+        error = (
+            "Debes iniciar sesión para buscar solo "
+            "en tu ludoteca."
+        )
+
+    else:
+        juegos = buscar_juegos_por_nombre(
+            texto_busqueda=texto_busqueda,
+            limite=40,
+            usuario_id=usuario["id"] if usuario else None,
+            solo_ludoteca=solo_ludoteca
+        )
+
+    return plantillas.TemplateResponse(
+        request=request,
+        name="buscar.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "q": texto_busqueda,
+            "solo_ludoteca": solo_ludoteca,
+            "juegos": juegos,
+            "total_resultados": len(juegos),
+            "error": error
+        }
     )
 
 @app.get(

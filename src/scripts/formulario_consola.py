@@ -1,12 +1,17 @@
-from opciones_formulario import (
-    obtener_categorias_populares,
-    obtener_mecanicas_populares,
-    seleccionar_opciones
-)
-from recomendador_basico import (
+from app.services.recomendador_basico import (
     recomendar_juegos,
-    mostrar_recomendaciones
+    mostrar_recomendaciones,
+    limpiar_lista_texto
 )
+
+import sys
+from pathlib import Path
+
+
+RUTA_SRC = Path(__file__).resolve().parents[1]
+
+if str(RUTA_SRC) not in sys.path:
+    sys.path.insert(0, str(RUTA_SRC))
 
 
 def pedir_entero(mensaje, minimo=None, maximo=None):

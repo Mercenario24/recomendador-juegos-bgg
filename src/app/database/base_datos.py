@@ -1,8 +1,6 @@
 import sqlite3
-from pathlib import Path
 
-
-RUTA_BD = Path("datos/juegos.db")
+from app.config import RUTA_BD
 
 
 def crear_conexion():
@@ -335,3 +333,80 @@ def obtener_detalle_juego(id_bgg):
     conexion.close()
 
     return juego
+
+def buscar_juegos_por_nombre(
+    texto_busqueda,
+    limite=30,
+    usuario_id=None,
+    solo_ludoteca=False
+):
+    conexion = crear_conexion()
+    conexion.row_factory = sqlite3.Row
+    cursor = conexion.cursor()
+
+    texto = f"%{texto_busqueda.strip().lower()}%"
+
+    consulta = """
+        SELECT
+            j.id_bgg,
+            j.nombre,
+            j.anio_publicacion,
+            j.min_jugadores,
+            j.max_jugadores,
+            j.duracion_minima,
+            j.duracion_maxima,
+            j.complejidad,
+            j.valoracion_media,
+            j.imagen_url
+        FROM juegos j
+    """
+
+    parametros = []
+
+    if solo_ludoteca:
+        consulta += """
+            JOIN ludoteca_usuario lu
+                ON j.id_bgg = lu.juego_id
+        """
+
+    consulta += """
+        WHERE LOWER(j.nombre) LIKE ?
+    """
+
+    parametros.append(texto)
+
+    if solo_ludoteca:
+        consulta += """
+          AND lu.usuario_id = ?
+        """
+
+        parametros.append(usuario_id)
+
+    consulta += """
+        ORDER BY
+            CASE
+                WHEN LOWER(j.nombre) = LOWER(?) THEN 0
+                WHEN LOWER(j.nombre) LIKE LOWER(?) THEN 1
+                ELSE 2
+            END,
+            j.valoracion_media DESC,
+            LOWER(j.nombre) ASC
+        LIMIT ?
+    """
+
+    parametros.extend([
+        texto_busqueda.strip(),
+        f"{texto_busqueda.strip()}%",
+        limite
+    ])
+
+    cursor.execute(consulta, parametros)
+
+    juegos = [
+        dict(fila)
+        for fila in cursor.fetchall()
+    ]
+
+    conexion.close()
+
+    return juegos

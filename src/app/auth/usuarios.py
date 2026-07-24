@@ -3,7 +3,7 @@ import sqlite3
 
 from pwdlib import PasswordHash
 
-from base_datos import crear_conexion
+from app.database.base_datos import crear_conexion
 
 
 GESTOR_CONTRASENAS = PasswordHash.recommended()

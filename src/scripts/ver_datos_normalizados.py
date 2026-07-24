@@ -1,4 +1,13 @@
-from base_datos import crear_conexion
+from app.database.base_datos import crear_conexion
+
+import sys
+from pathlib import Path
+
+
+RUTA_SRC = Path(__file__).resolve().parents[1]
+
+if str(RUTA_SRC) not in sys.path:
+    sys.path.insert(0, str(RUTA_SRC))
 
 
 def mostrar_resumen():

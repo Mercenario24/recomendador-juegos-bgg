@@ -1085,3 +1085,77 @@ select:focus {
         flex-direction: column;
     }
 }
+
+.buscador-cabecera {
+    display: flex;
+    width: min(100%, 620px);
+    margin-bottom: 34px;
+    border-radius: 13px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.12);
+}
+
+.buscador-cabecera input {
+    flex: 1;
+    min-height: 52px;
+    padding: 0 16px;
+    border: 0;
+    outline: none;
+}
+
+.buscador-cabecera button {
+    min-width: 110px;
+    border: 0;
+    background: var(--primario);
+    color: white;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.buscador-cabecera button:hover {
+    background: var(--primario-oscuro);
+}
+
+.formulario-busqueda {
+    display: grid;
+    gap: 18px;
+}
+
+.campo-busqueda {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+}
+
+.campo-busqueda input[type="search"] {
+    width: 100%;
+    min-height: 54px;
+    padding: 0 16px;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    outline: none;
+}
+
+.campo-busqueda input[type="search"]:focus {
+    border-color: var(--primario);
+    box-shadow: 0 0 0 4px rgba(39, 93, 71, 0.12);
+}
+
+.opcion-busqueda-ludoteca {
+    margin-top: 0;
+}
+
+@media (max-width: 650px) {
+    .buscador-cabecera {
+        flex-direction: column;
+    }
+
+    .buscador-cabecera button {
+        min-height: 48px;
+    }
+
+    .campo-busqueda {
+        grid-template-columns: 1fr;
+    }
+}
