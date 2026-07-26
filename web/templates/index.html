@@ -75,6 +75,19 @@
                 </div>
             </nav>
 
+            
+
+            <p class="etiqueta-superior">
+                BOARDGAME RECOMMENDER
+            </p>
+
+            <h1>Encuentra tu próximo juego de mesa</h1>
+
+            <p class="descripcion-cabecera">
+                Indica las características de vuestra partida y
+                obtendrás recomendaciones basadas en BoardGameGeek.
+            </p>
+
             <form
                 action="/buscar"
                 method="get"
@@ -91,17 +104,6 @@
                     Buscar
                 </button>
             </form>
-
-            <p class="etiqueta-superior">
-                BOARDGAME RECOMMENDER
-            </p>
-
-            <h1>Encuentra tu próximo juego de mesa</h1>
-
-            <p class="descripcion-cabecera">
-                Indica las características de vuestra partida y
-                obtendrás recomendaciones basadas en BoardGameGeek.
-            </p>
         </div>
     </header>
 
@@ -619,12 +621,7 @@
         {% endif %}
     </main>
 
-    <footer class="pie">
-        <div class="contenedor">
-            Proyecto local de recomendación de juegos de mesa.
-            Datos obtenidos de BoardGameGeek.
-        </div>
-    </footer>
+    {% include "componentes/footer.html" %}
 
     <script>
         const radiosModoJugadores = document.querySelectorAll(
@@ -680,6 +677,8 @@
 
         actualizarModoJugadores();
     </script>
+
+    
 
 </body>
 </html>

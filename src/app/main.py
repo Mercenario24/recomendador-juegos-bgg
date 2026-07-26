@@ -77,6 +77,13 @@ from app.config import (
     RUTA_STATIC
 )
 
+from app.support.soporte import (
+    cambiar_estado_mensaje_soporte,
+    crear_tabla_mensajes_soporte,
+    guardar_mensaje_soporte,
+    obtener_mensajes_soporte
+)
+
 
 CLAVE_SESION = os.getenv("SESSION_SECRET")
 
@@ -105,6 +112,7 @@ crear_tabla_usuarios()
 asegurar_columnas_usuarios()
 crear_tablas_ludoteca()
 preparar_tablas_admin()
+crear_tabla_mensajes_soporte()
 
 app.mount(
     "/static",
@@ -1230,6 +1238,155 @@ async def borrar_video_tiktok(
 
     return RedirectResponse(
         url=f"/admin/juegos/{juego_id}/videos",
+        status_code=303
+    )
+
+@app.get("/admin/soporte", response_class=HTMLResponse)
+async def mostrar_mensajes_soporte_admin(request: Request):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    mensajes = obtener_mensajes_soporte()
+
+    return plantillas.TemplateResponse(
+        request=request,
+        name="admin/soporte.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "mensajes": mensajes
+        }
+    )
+
+@app.get("/soporte", response_class=HTMLResponse)
+async def mostrar_soporte(request: Request):
+    usuario = obtener_usuario_actual(request)
+
+    mensaje_exito = request.session.pop(
+        "mensaje_soporte",
+        None
+    )
+
+    error = request.session.pop(
+        "error_soporte",
+        None
+    )
+
+    valores = request.session.pop(
+        "valores_soporte",
+        None
+    )
+
+    if valores is None:
+        valores = {
+            "nombre": usuario["nombre"] if usuario else "",
+            "email": usuario["email"] if usuario else "",
+            "tipo": "mejora",
+            "asunto": "",
+            "mensaje": ""
+        }
+
+    return plantillas.TemplateResponse(
+        request=request,
+        name="soporte.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "mensaje_exito": mensaje_exito,
+            "error": error,
+            "valores": valores
+        }
+    )
+
+@app.post("/admin/soporte/{mensaje_id}/estado")
+async def actualizar_estado_soporte_admin(
+    request: Request,
+    mensaje_id: int,
+    estado: str = Form(...)
+):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    try:
+        cambiar_estado_mensaje_soporte(
+            mensaje_id=mensaje_id,
+            estado=estado
+        )
+
+    except ValueError as error:
+        print(f"Error cambiando estado de soporte: {error}")
+
+    except Exception as error:
+        print(f"Error inesperado cambiando estado de soporte: {error}")
+
+    return RedirectResponse(
+        url="/admin/soporte",
+        status_code=303
+    )
+
+@app.post("/soporte")
+async def enviar_soporte(
+    request: Request,
+    nombre: str = Form(...),
+    email: str = Form(...),
+    tipo: str = Form(...),
+    asunto: str = Form(...),
+    mensaje: str = Form(...)
+):
+    usuario = obtener_usuario_actual(request)
+
+    try:
+        guardar_mensaje_soporte(
+            usuario_id=usuario["id"] if usuario else None,
+            nombre=nombre,
+            email=email,
+            tipo=tipo,
+            asunto=asunto,
+            mensaje=mensaje
+        )
+
+        request.session["mensaje_soporte"] = (
+            "Mensaje enviado correctamente. Gracias por ayudar a mejorar la web."
+        )
+
+    except ValueError as error:
+        request.session["error_soporte"] = str(error)
+
+        request.session["valores_soporte"] = {
+            "nombre": nombre,
+            "email": email,
+            "tipo": tipo,
+            "asunto": asunto,
+            "mensaje": mensaje
+        }
+
+    except Exception as error:
+        print(f"Error guardando mensaje de soporte: {error}")
+
+        request.session["error_soporte"] = (
+            "Se ha producido un error al enviar el mensaje."
+        )
+
+        request.session["valores_soporte"] = {
+            "nombre": nombre,
+            "email": email,
+            "tipo": tipo,
+            "asunto": asunto,
+            "mensaje": mensaje
+        }
+
+    return RedirectResponse(
+        url="/soporte",
         status_code=303
     )
 

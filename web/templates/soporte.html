@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Soporte y mejoras | Recomendador BGG</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera cabecera-ludoteca">
+        <div class="contenedor">
+            <nav class="navegacion-principal">
+                <a href="/" class="marca-navegacion">
+                    Recomendador BGG
+                </a>
+
+                <div class="acciones-navegacion">
+                    <a href="/" class="boton-navegacion">
+                        Recomendador
+                    </a>
+
+                    {% if usuario %}
+                        <a href="/mi-ludoteca" class="boton-navegacion">
+                            Mi ludoteca
+                        </a>
+
+                        {% if usuario.es_admin %}
+                            <a href="/admin" class="boton-navegacion">
+                                Admin
+                            </a>
+                        {% endif %}
+
+                        <span class="usuario-navegacion">
+                            {{ usuario.nombre }}
+                        </span>
+
+                        <form
+                            action="/cerrar-sesion"
+                            method="post"
+                        >
+                            <button
+                                type="submit"
+                                class="boton-navegacion"
+                            >
+                                Cerrar sesión
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="/iniciar-sesion" class="boton-navegacion">
+                            Iniciar sesión
+                        </a>
+
+                        <a
+                            href="/registro"
+                            class="boton-navegacion boton-registro"
+                        >
+                            Crear cuenta
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+
+            <p class="etiqueta-superior">
+                SOPORTE
+            </p>
+
+            <h1>Enviar soporte o mejora</h1>
+
+            <p class="descripcion-cabecera">
+                Usa este formulario para avisar de errores,
+                proponer mejoras o enviar cualquier comentario
+                sobre la web.
+            </p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        {% if mensaje_exito %}
+            <div class="mensaje-exito">
+                {{ mensaje_exito }}
+            </div>
+        {% endif %}
+
+        {% if error %}
+            <div class="mensaje-error">
+                <strong>No se pudo enviar el mensaje</strong>
+                <span>{{ error }}</span>
+            </div>
+        {% endif %}
+
+        <section class="panel-formulario">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="numero-paso">
+                        CONTACTO
+                    </p>
+
+                    <h2>Cuéntanos qué ocurre</h2>
+                </div>
+            </div>
+
+            <form
+                action="/soporte"
+                method="post"
+                class="formulario-soporte"
+            >
+                <div class="rejilla-formulario-soporte">
+                    <div class="campo">
+                        <label for="nombre">Nombre</label>
+
+                        <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            value="{{ valores.nombre }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="email">Email</label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="{{ valores.email }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="tipo">Tipo de mensaje</label>
+
+                        <select
+                            id="tipo"
+                            name="tipo"
+                            required
+                        >
+                            <option
+                                value="mejora"
+                                {% if valores.tipo == "mejora" %}selected{% endif %}
+                            >
+                                Mejora
+                            </option>
+
+                            <option
+                                value="soporte"
+                                {% if valores.tipo == "soporte" %}selected{% endif %}
+                            >
+                                Soporte
+                            </option>
+
+                            <option
+                                value="error"
+                                {% if valores.tipo == "error" %}selected{% endif %}
+                            >
+                                Error
+                            </option>
+
+                            <option
+                                value="otro"
+                                {% if valores.tipo == "otro" %}selected{% endif %}
+                            >
+                                Otro
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="campo">
+                        <label for="asunto">Asunto</label>
+
+                        <input
+                            type="text"
+                            id="asunto"
+                            name="asunto"
+                            value="{{ valores.asunto }}"
+                            maxlength="120"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="campo">
+                    <label for="mensaje">Mensaje</label>
+
+                    <textarea
+                        id="mensaje"
+                        name="mensaje"
+                        rows="8"
+                        maxlength="3000"
+                        placeholder="Describe el problema, la mejora o la idea..."
+                        required
+                    >{{ valores.mensaje }}</textarea>
+                </div>
+
+                <button
+                    type="submit"
+                    class="boton-principal"
+                >
+                    Enviar mensaje
+                </button>
+            </form>
+        </section>
+    </main>
+    {% include "componentes/footer.html" %}
+</body>
+</html>

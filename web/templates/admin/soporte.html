@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Mensajes de soporte | Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera cabecera-ludoteca">
+        <div class="contenedor">
+            <nav class="navegacion-principal">
+                <a href="/" class="marca-navegacion">
+                    Recomendador BGG
+                </a>
+
+                <div class="acciones-navegacion">
+                    <a href="/admin" class="boton-navegacion">
+                        Panel admin
+                    </a>
+
+                    <a href="/admin/usuarios" class="boton-navegacion">
+                        Usuarios
+                    </a>
+
+                    <a href="/admin/juegos" class="boton-navegacion">
+                        Juegos
+                    </a>
+
+                    <a href="/" class="boton-navegacion">
+                        Web
+                    </a>
+
+                    <form
+                        action="/cerrar-sesion"
+                        method="post"
+                    >
+                        <button
+                            type="submit"
+                            class="boton-navegacion"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </nav>
+
+            <p class="etiqueta-superior">
+                ADMINISTRACIÓN
+            </p>
+
+            <h1>Mensajes de soporte</h1>
+
+            <p class="descripcion-cabecera">
+                Aquí puedes revisar los mensajes enviados desde el formulario
+                de soporte, mejoras y errores.
+            </p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        <section class="panel-formulario">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="numero-paso">
+                        MENSAJES RECIBIDOS
+                    </p>
+
+                    <h2>
+                        {% if mensajes %}
+                            {{ mensajes|length }} mensajes
+                        {% else %}
+                            No hay mensajes todavía
+                        {% endif %}
+                    </h2>
+                </div>
+            </div>
+
+            {% if mensajes %}
+                <div class="lista-mensajes-soporte">
+                    {% for mensaje in mensajes %}
+                        <article class="tarjeta-mensaje-soporte">
+                            <div class="cabecera-mensaje-soporte">
+                                <div>
+                                    <span class="etiqueta-tipo-soporte">
+                                        {{ mensaje.tipo }}
+                                    </span>
+
+                                    <h3>
+                                        {{ mensaje.asunto }}
+                                    </h3>
+                                </div>
+
+                                <form
+                                    action="/admin/soporte/{{ mensaje.id }}/estado"
+                                    method="post"
+                                    class="formulario-estado-soporte"
+                                >
+                                    <select name="estado">
+                                        <option
+                                            value="pendiente"
+                                            {% if mensaje.estado == "pendiente" %}selected{% endif %}
+                                        >
+                                            Pendiente
+                                        </option>
+
+                                        <option
+                                            value="en_revision"
+                                            {% if mensaje.estado == "en_revision" %}selected{% endif %}
+                                        >
+                                            En revisión
+                                        </option>
+
+                                        <option
+                                            value="resuelto"
+                                            {% if mensaje.estado == "resuelto" %}selected{% endif %}
+                                        >
+                                            Resuelto
+                                        </option>
+
+                                        <option
+                                            value="descartado"
+                                            {% if mensaje.estado == "descartado" %}selected{% endif %}
+                                        >
+                                            Descartado
+                                        </option>
+                                    </select>
+
+                                    <button
+                                        type="submit"
+                                        class="boton-pequeno"
+                                    >
+                                        Guardar
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="datos-mensaje-soporte">
+                                <p>
+                                    <strong>Nombre:</strong>
+                                    {{ mensaje.nombre }}
+                                </p>
+
+                                <p>
+                                    <strong>Email:</strong>
+                                    <a href="mailto:{{ mensaje.email }}">
+                                        {{ mensaje.email }}
+                                    </a>
+                                </p>
+
+                                {% if mensaje.nombre_usuario %}
+                                    <p>
+                                        <strong>Usuario registrado:</strong>
+                                        {{ mensaje.nombre_usuario }}
+                                    </p>
+                                {% endif %}
+
+                                <p>
+                                    <strong>Fecha:</strong>
+                                    {{ mensaje.fecha_creacion }}
+                                </p>
+                            </div>
+
+                            <div class="contenido-mensaje-soporte">
+                                <p>
+                                    {{ mensaje.mensaje }}
+                                </p>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="mensaje-vacio">
+                    <p>
+                        Todavía no se ha enviado ningún mensaje desde el formulario
+                        de soporte.
+                    </p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+
+    {% include "componentes/footer.html" %}
+</body>
+</html>
