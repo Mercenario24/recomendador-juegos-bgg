@@ -23,13 +23,40 @@ def crear_tabla_usuarios():
             nombre TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
             contrasena_hash TEXT NOT NULL,
-            fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            es_admin INTEGER NOT NULL DEFAULT 0,
+            activo INTEGER NOT NULL DEFAULT 1
         )
     """)
 
     conexion.commit()
     conexion.close()
 
+def asegurar_columnas_usuarios():
+    conexion = crear_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("PRAGMA table_info(usuarios)")
+
+    columnas = [
+        fila[1]
+        for fila in cursor.fetchall()
+    ]
+
+    if "es_admin" not in columnas:
+        cursor.execute("""
+            ALTER TABLE usuarios
+            ADD COLUMN es_admin INTEGER NOT NULL DEFAULT 0
+        """)
+
+    if "activo" not in columnas:
+        cursor.execute("""
+            ALTER TABLE usuarios
+            ADD COLUMN activo INTEGER NOT NULL DEFAULT 1
+        """)
+
+    conexion.commit()
+    conexion.close()
 
 def normalizar_email(email):
     return email.strip().lower()
@@ -121,7 +148,9 @@ def registrar_usuario(
                 id,
                 nombre,
                 email,
-                fecha_registro
+                fecha_registro,
+                es_admin,
+                activo
             FROM usuarios
             WHERE id = ?
         """, (usuario_id,))
@@ -140,7 +169,7 @@ def registrar_usuario(
 
 
 def obtener_usuario_por_email(email):
-    email = normalizar_email(email)
+    email_normalizado = normalizar_email(email)
 
     conexion = crear_conexion()
     conexion.row_factory = sqlite3.Row
@@ -152,10 +181,12 @@ def obtener_usuario_por_email(email):
             nombre,
             email,
             contrasena_hash,
-            fecha_registro
+            fecha_registro,
+            es_admin,
+            activo
         FROM usuarios
         WHERE email = ?
-    """, (email,))
+    """, (email_normalizado,))
 
     usuario = cursor.fetchone()
     conexion.close()
@@ -176,7 +207,9 @@ def obtener_usuario_por_id(usuario_id):
             id,
             nombre,
             email,
-            fecha_registro
+            fecha_registro,
+            es_admin,
+            activo
         FROM usuarios
         WHERE id = ?
     """, (usuario_id,))
@@ -196,6 +229,9 @@ def autenticar_usuario(email, contrasena):
     if usuario is None:
         return None
 
+    if not usuario["activo"]:
+        return None
+
     try:
         contrasena_correcta = GESTOR_CONTRASENAS.verify(
             contrasena,
@@ -211,5 +247,7 @@ def autenticar_usuario(email, contrasena):
         "id": usuario["id"],
         "nombre": usuario["nombre"],
         "email": usuario["email"],
-        "fecha_registro": usuario["fecha_registro"]
+        "fecha_registro": usuario["fecha_registro"],
+        "es_admin": usuario["es_admin"],
+        "activo": usuario["activo"]
     }

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuarios | Admin</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera cabecera-ludoteca">
+        <div class="contenedor">
+            <nav class="navegacion-principal">
+                <a href="/" class="marca-navegacion">
+                    Recomendador BGG
+                </a>
+
+                <div class="acciones-navegacion">
+                    <a href="/admin" class="boton-navegacion">
+                        Admin
+                    </a>
+
+                    <a href="/admin/juegos" class="boton-navegacion">
+                        TikToks
+                    </a>
+
+                    <a href="/" class="boton-navegacion">
+                        Recomendador
+                    </a>
+                </div>
+            </nav>
+
+            <p class="etiqueta-superior">ADMINISTRACIÓN</p>
+            <h1>Usuarios</h1>
+            <p class="descripcion-cabecera">
+                Activa, desactiva y asigna permisos de administrador.
+            </p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        {% if mensaje %}
+            <div class="mensaje-exito">{{ mensaje }}</div>
+        {% endif %}
+
+        {% if error %}
+            <div class="mensaje-error">
+                <strong>Error</strong>
+                <span>{{ error }}</span>
+            </div>
+        {% endif %}
+
+        <section class="panel-formulario">
+            <div class="tabla-responsive">
+                <table class="tabla-admin">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Ludoteca</th>
+                            <th>Admin</th>
+                            <th>Activo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for usuario_admin in usuarios %}
+                            <tr>
+                                <td>
+                                    <strong>{{ usuario_admin.nombre }}</strong>
+                                    <small>
+                                        Registrado:
+                                        {{ usuario_admin.fecha_registro }}
+                                    </small>
+                                </td>
+
+                                <td>{{ usuario_admin.email }}</td>
+
+                                <td>
+                                    {{ usuario_admin.total_ludoteca }}
+                                    juegos
+                                </td>
+
+                                <td>
+                                    <form
+                                        action="/admin/usuarios/{{ usuario_admin.id }}/admin"
+                                        method="post"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="es_admin"
+                                            value="false"
+                                        >
+
+                                        <label class="interruptor-admin">
+                                            <input
+                                                type="checkbox"
+                                                name="es_admin"
+                                                value="true"
+                                                onchange="this.form.submit()"
+                                                {% if usuario_admin.es_admin %}
+                                                    checked
+                                                {% endif %}
+                                            >
+
+                                            <span>
+                                                {% if usuario_admin.es_admin %}
+                                                    Sí
+                                                {% else %}
+                                                    No
+                                                {% endif %}
+                                            </span>
+                                        </label>
+                                    </form>
+                                </td>
+
+                                <td>
+                                    <form
+                                        action="/admin/usuarios/{{ usuario_admin.id }}/activo"
+                                        method="post"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="activo"
+                                            value="false"
+                                        >
+
+                                        <label class="interruptor-admin">
+                                            <input
+                                                type="checkbox"
+                                                name="activo"
+                                                value="true"
+                                                onchange="this.form.submit()"
+                                                {% if usuario_admin.activo %}
+                                                    checked
+                                                {% endif %}
+                                            >
+
+                                            <span>
+                                                {% if usuario_admin.activo %}
+                                                    Activo
+                                                {% else %}
+                                                    Bloqueado
+                                                {% endif %}
+                                            </span>
+                                        </label>
+                                    </form>
+                                </td>
+                                <td>
+                                    {% if usuario_admin.id != usuario.id %}
+                                        <form
+                                            action="/admin/usuarios/{{ usuario_admin.id }}/eliminar"
+                                            method="post"
+                                            onsubmit="return confirm('¿Seguro que quieres eliminar este usuario? Esta acción no se puede deshacer.')"
+                                        >
+                                            <button
+                                                type="submit"
+                                                class="boton-peligro"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="texto-suave">
+                                            Usuario actual
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

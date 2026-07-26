@@ -25,6 +25,7 @@ from app.database.base_datos import (
 )
 
 from app.auth.usuarios import (
+    asegurar_columnas_usuarios,
     autenticar_usuario,
     crear_tabla_usuarios,
     obtener_usuario_por_id,
@@ -44,6 +45,22 @@ from app.library.ludoteca import (
 from app.services.bgg_api import obtener_juegos_por_ids
 from app.services.parser_bgg import parsear_juegos
 from app.services.importador_ludoteca import leer_archivo_ludoteca
+from app.admin.administracion import preparar_tablas_admin
+
+from app.admin.administracion import (
+    buscar_juegos_admin,
+    cambiar_usuario_activo,
+    cambiar_usuario_admin,
+    eliminar_usuario,
+    eliminar_video_tiktok,
+    guardar_video_tiktok,
+    obtener_estadisticas_admin,
+    obtener_usuarios_admin,
+    obtener_video_tiktok,
+    obtener_videos_tiktok_de_juego,
+    obtener_videos_tiktok_publicos,
+    preparar_tablas_admin
+)
 
 from dotenv import load_dotenv
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -85,8 +102,9 @@ app.add_middleware(
     )
 
 crear_tabla_usuarios()
-
+asegurar_columnas_usuarios()
 crear_tablas_ludoteca()
+preparar_tablas_admin()
 
 app.mount(
     "/static",
@@ -342,6 +360,24 @@ def obtener_usuario_actual(request):
     if usuario is None:
         request.session.clear()
         return None
+
+    if not usuario.get("activo", 1):
+        request.session.clear()
+        return None
+
+    return usuario
+
+def obtener_admin_actual(request):
+    usuario = obtener_usuario_actual(request)
+
+    if usuario is None:
+        return None
+
+    if not usuario.get("es_admin"):
+        raise HTTPException(
+            status_code=403,
+            detail="No tienes permisos de administrador."
+        )
 
     return usuario
 
@@ -860,6 +896,343 @@ async def buscar_juegos(
         }
     )
 
+@app.get("/admin", response_class=HTMLResponse)
+async def panel_admin(request: Request):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    estadisticas = obtener_estadisticas_admin()
+
+    return plantillas.TemplateResponse(
+        request=request,
+        name="admin/dashboard.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "estadisticas": estadisticas
+        }
+    )
+
+
+@app.get("/admin/usuarios", response_class=HTMLResponse)
+async def admin_usuarios(request: Request):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    mensaje = request.session.pop(
+        "mensaje_admin",
+        None
+    )
+
+    error = request.session.pop(
+        "error_admin",
+        None
+    )
+
+    usuarios = obtener_usuarios_admin()
+
+    return plantillas.TemplateResponse(
+        request=request,
+        name="admin/usuarios.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "usuarios": usuarios,
+            "mensaje": mensaje,
+            "error": error
+        }
+    )
+
+
+@app.post("/admin/usuarios/{usuario_id}/admin")
+async def cambiar_permiso_admin(
+    request: Request,
+    usuario_id: int,
+    es_admin: bool = Form(False)
+):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    if usuario_id == usuario["id"] and not es_admin:
+        request.session["error_admin"] = (
+            "No puedes quitarte permisos de administrador a ti mismo."
+        )
+
+        return RedirectResponse(
+            url="/admin/usuarios",
+            status_code=303
+        )
+
+    cambiar_usuario_admin(
+        usuario_id=usuario_id,
+        es_admin=es_admin
+    )
+
+    request.session["mensaje_admin"] = (
+        "Permisos actualizados correctamente."
+    )
+
+    return RedirectResponse(
+        url="/admin/usuarios",
+        status_code=303
+    )
+
+
+@app.post("/admin/usuarios/{usuario_id}/activo")
+async def cambiar_estado_usuario(
+    request: Request,
+    usuario_id: int,
+    activo: bool = Form(False)
+):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    if usuario_id == usuario["id"] and not activo:
+        request.session["error_admin"] = (
+            "No puedes desactivar tu propio usuario."
+        )
+
+        return RedirectResponse(
+            url="/admin/usuarios",
+            status_code=303
+        )
+
+    cambiar_usuario_activo(
+        usuario_id=usuario_id,
+        activo=activo
+    )
+
+    request.session["mensaje_admin"] = (
+        "Estado del usuario actualizado correctamente."
+    )
+
+    return RedirectResponse(
+        url="/admin/usuarios",
+        status_code=303
+    )
+
+@app.post("/admin/usuarios/{usuario_id}/eliminar")
+async def eliminar_usuario_admin(
+    request: Request,
+    usuario_id: int
+):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    if usuario_id == usuario["id"]:
+        request.session["error_admin"] = (
+            "No puedes eliminar tu propio usuario."
+        )
+
+        return RedirectResponse(
+            url="/admin/usuarios",
+            status_code=303
+        )
+
+    eliminado = eliminar_usuario(usuario_id)
+
+    if eliminado:
+        request.session["mensaje_admin"] = (
+            "Usuario eliminado correctamente."
+        )
+    else:
+        request.session["error_admin"] = (
+            "No se ha encontrado el usuario que quieres eliminar."
+        )
+
+    return RedirectResponse(
+        url="/admin/usuarios",
+        status_code=303
+    )
+
+@app.get("/admin/juegos", response_class=HTMLResponse)
+async def admin_juegos(
+    request: Request,
+    q: str = ""
+):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    texto_busqueda = q.strip()
+    juegos = []
+
+    if texto_busqueda:
+        juegos = buscar_juegos_admin(
+            texto_busqueda=texto_busqueda,
+            limite=50
+        )
+
+    return plantillas.TemplateResponse(
+        request=request,
+        name="admin/juegos.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "q": texto_busqueda,
+            "juegos": juegos
+        }
+    )
+
+
+@app.get(
+    "/admin/juegos/{id_bgg}/videos",
+    response_class=HTMLResponse
+)
+async def admin_videos_juego(
+    request: Request,
+    id_bgg: int
+):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    juego = obtener_detalle_juego(id_bgg)
+
+    if juego is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Juego no encontrado."
+        )
+
+    videos = obtener_videos_tiktok_de_juego(id_bgg)
+
+    mensaje = request.session.pop(
+        "mensaje_admin",
+        None
+    )
+
+    error = request.session.pop(
+        "error_admin",
+        None
+    )
+
+    return plantillas.TemplateResponse(
+        request=request,
+        name="admin/videos_juego.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "juego": juego,
+            "videos": videos,
+            "mensaje": mensaje,
+            "error": error
+        }
+    )
+
+
+@app.post("/admin/juegos/{id_bgg}/videos")
+async def crear_video_tiktok_juego(
+    request: Request,
+    id_bgg: int,
+    url: str = Form(...),
+    titulo: str = Form(""),
+    activo: bool = Form(False)
+):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    juego = obtener_detalle_juego(id_bgg)
+
+    if juego is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Juego no encontrado."
+        )
+
+    try:
+        guardar_video_tiktok(
+            juego_id=id_bgg,
+            url=url,
+            titulo=titulo,
+            activo=activo
+        )
+
+        request.session["mensaje_admin"] = (
+            "Vídeo de TikTok añadido correctamente."
+        )
+
+    except ValueError as error:
+        request.session["error_admin"] = str(error)
+
+    return RedirectResponse(
+        url=f"/admin/juegos/{id_bgg}/videos",
+        status_code=303
+    )
+
+
+@app.post("/admin/videos/{video_id}/eliminar")
+async def borrar_video_tiktok(
+    request: Request,
+    video_id: int
+):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    video = obtener_video_tiktok(video_id)
+
+    if video is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Vídeo no encontrado."
+        )
+
+    juego_id = video["juego_id"]
+
+    eliminar_video_tiktok(video_id)
+
+    request.session["mensaje_admin"] = (
+        "Vídeo eliminado correctamente."
+    )
+
+    return RedirectResponse(
+        url=f"/admin/juegos/{juego_id}/videos",
+        status_code=303
+    )
+
 @app.get(
     "/juego/{id_bgg}",
     response_class=HTMLResponse
@@ -876,11 +1249,14 @@ async def mostrar_detalle_juego(
             detail="El juego solicitado no existe."
         )
 
+    videos_tiktok = obtener_videos_tiktok_publicos(id_bgg)
+
     return plantillas.TemplateResponse(
         request=request,
         name="detalle_juego.html",
         context={
             "request": request,
-            "juego": juego
+            "juego": juego,
+            "videos_tiktok": videos_tiktok
         }
     )

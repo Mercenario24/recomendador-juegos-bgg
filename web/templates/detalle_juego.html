@@ -205,6 +205,76 @@
                         </p>
                     {% endif %}
                 </section>
+                {% if videos_tiktok %}
+                    <section class="panel-formulario bloque-tiktoks">
+                        <div class="titulo-seccion">
+                            <div>
+                                <p class="numero-paso">
+                                    VÍDEOS
+                                </p>
+
+                                <h2>TikToks sobre este juego</h2>
+                            </div>
+                        </div>
+
+                        <div class="rejilla-tiktoks-embed">
+                            {% for video in videos_tiktok %}
+                                <article class="tarjeta-tiktok-embed">
+                                    {% if video.titulo %}
+                                        <h3>{{ video.titulo }}</h3>
+                                    {% endif %}
+
+                                    {% if video.video_id %}
+                                        <blockquote
+                                            class="tiktok-embed"
+                                            cite="{{ video.url }}"
+                                            data-video-id="{{ video.video_id }}"
+                                            style="max-width: 605px; min-width: 325px;"
+                                        >
+                                            <section>
+                                                <a
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    href="{{ video.url }}"
+                                                >
+                                                    Ver TikTok
+                                                </a>
+                                            </section>
+                                        </blockquote>
+                                    {% else %}
+                                        <a
+                                            href="{{ video.url }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="tarjeta-tiktok-publica"
+                                        >
+                                            <span class="icono-tiktok">♪</span>
+
+                                            <div>
+                                                <strong>
+                                                    {% if video.titulo %}
+                                                        {{ video.titulo }}
+                                                    {% else %}
+                                                        Ver TikTok
+                                                    {% endif %}
+                                                </strong>
+
+                                                <small>
+                                                    Abrir vídeo en TikTok ↗
+                                                </small>
+                                            </div>
+                                        </a>
+                                    {% endif %}
+                                </article>
+                            {% endfor %}
+                        </div>
+
+                        <script
+                            async
+                            src="https://www.tiktok.com/embed.js"
+                        ></script>
+                    </section>
+                {% endif %}
             </section>
         </article>
     </main>

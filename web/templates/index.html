@@ -26,6 +26,15 @@
 
                 <div class="acciones-navegacion">
                     {% if usuario %}
+                        {% if usuario.es_admin %}
+                            <a
+                                href="/admin"
+                                class="boton-navegacion"
+                            >
+                                Admin
+                            </a>
+                        {% endif %}
+
                         <a
                             href="/mi-ludoteca"
                             class="boton-navegacion"

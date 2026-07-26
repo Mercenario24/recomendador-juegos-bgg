@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>TikToks | Admin</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera cabecera-ludoteca">
+        <div class="contenedor">
+            <nav class="navegacion-principal">
+                <a href="/" class="marca-navegacion">
+                    Recomendador BGG
+                </a>
+
+                <div class="acciones-navegacion">
+                    <a href="/admin" class="boton-navegacion">
+                        Admin
+                    </a>
+
+                    <a href="/admin/juegos" class="boton-navegacion">
+                        Buscar juegos
+                    </a>
+
+                    <a
+                        href="/juego/{{ juego.id_bgg }}"
+                        class="boton-navegacion"
+                    >
+                        Ver ficha
+                    </a>
+                </div>
+            </nav>
+
+            <p class="etiqueta-superior">ADMINISTRACIÓN</p>
+            <h1>{{ juego.nombre }}</h1>
+            <p class="descripcion-cabecera">
+                Añade enlaces de TikTok relacionados con este juego.
+            </p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        {% if mensaje %}
+            <div class="mensaje-exito">{{ mensaje }}</div>
+        {% endif %}
+
+        {% if error %}
+            <div class="mensaje-error">
+                <strong>Error</strong>
+                <span>{{ error }}</span>
+            </div>
+        {% endif %}
+
+        <section class="panel-formulario">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="numero-paso">NUEVO ENLACE</p>
+                    <h2>Añadir TikTok</h2>
+                </div>
+            </div>
+
+            <form
+                action="/admin/juegos/{{ juego.id_bgg }}/videos"
+                method="post"
+                class="formulario-importacion"
+            >
+                <div class="campo">
+                    <label for="titulo">Título opcional</label>
+                    <input
+                        type="text"
+                        id="titulo"
+                        name="titulo"
+                        placeholder="Ejemplo: Reseña rápida, cómo se juega..."
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="url">URL de TikTok</label>
+                    <input
+                        type="url"
+                        id="url"
+                        name="url"
+                        placeholder="https://www.tiktok.com/@usuario/video/..."
+                        required
+                    >
+                </div>
+
+                <label class="opcion-destacada">
+                    <input
+                        type="checkbox"
+                        name="activo"
+                        value="true"
+                        checked
+                    >
+
+                    <span>
+                        <strong>Visible en la ficha pública</strong>
+                        <small>
+                            Si lo desmarcas, se guarda pero no aparece
+                            para los usuarios.
+                        </small>
+                    </span>
+                </label>
+
+                <button type="submit" class="boton-principal">
+                    Guardar TikTok
+                </button>
+            </form>
+        </section>
+
+        <section class="seccion-resultados">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="numero-paso">ENLACES GUARDADOS</p>
+                    <h2>TikToks asociados</h2>
+                </div>
+
+                <span class="contador-resultados">
+                    {{ videos|length }} vídeos
+                </span>
+            </div>
+
+            {% if videos %}
+                <div class="lista-videos-admin">
+                    {% for video in videos %}
+                        <article class="tarjeta-video-admin">
+                            <div>
+                                <strong>
+                                    {% if video.titulo %}
+                                        {{ video.titulo }}
+                                    {% else %}
+                                        TikTok sin título
+                                    {% endif %}
+                                </strong>
+
+                                <a
+                                    href="{{ video.url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    {{ video.url }}
+                                </a>
+
+                                <small>
+                                    {% if video.activo %}
+                                        Visible
+                                    {% else %}
+                                        Oculto
+                                    {% endif %}
+                                    ·
+                                    {{ video.fecha_creacion }}
+                                </small>
+                            </div>
+
+                            <form
+                                action="/admin/videos/{{ video.id }}/eliminar"
+                                method="post"
+                                onsubmit="return confirm('¿Eliminar este TikTok?')"
+                            >
+                                <button
+                                    type="submit"
+                                    class="boton-peligro"
+                                >
+                                    Eliminar
+                                </button>
+                            </form>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="sin-resultados">
+                    <h3>No hay TikToks todavía</h3>
+                    <p>Añade el primer enlace usando el formulario.</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

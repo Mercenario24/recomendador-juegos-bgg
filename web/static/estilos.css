@@ -1159,3 +1159,238 @@ select:focus {
         grid-template-columns: 1fr;
     }
 }
+
+.rejilla-admin {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-top: 24px;
+}
+
+.tarjeta-admin {
+    padding: 22px;
+    border: 1px solid var(--borde);
+    border-radius: 14px;
+    background: var(--superficie-secundaria);
+}
+
+.tarjeta-admin span {
+    display: block;
+    color: var(--texto-suave);
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.tarjeta-admin strong {
+    font-size: 2rem;
+}
+
+.acciones-admin {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.boton-secundario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 18px;
+    border: 1px solid var(--borde);
+    border-radius: 11px;
+    background: white;
+    color: var(--texto);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.tabla-responsive {
+    overflow-x: auto;
+}
+
+.tabla-admin {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla-admin th,
+.tabla-admin td {
+    padding: 14px;
+    border-bottom: 1px solid var(--borde);
+    text-align: left;
+    vertical-align: top;
+}
+
+.tabla-admin th {
+    color: var(--texto-suave);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.tabla-admin small {
+    display: block;
+    margin-top: 4px;
+    color: var(--texto-suave);
+}
+
+.interruptor-admin {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.interruptor-admin input {
+    accent-color: var(--primario);
+}
+
+.lista-videos-admin {
+    display: grid;
+    gap: 14px;
+}
+
+.tarjeta-video-admin {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 16px;
+    border: 1px solid var(--borde);
+    border-radius: 13px;
+    background: white;
+}
+
+.tarjeta-video-admin a {
+    display: block;
+    margin: 6px 0;
+    word-break: break-all;
+}
+
+.tarjeta-video-admin small {
+    display: block;
+    color: var(--texto-suave);
+}
+
+.boton-peligro {
+    min-height: 40px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 9px;
+    background: #b42318;
+    color: white;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.boton-peligro:hover {
+    background: #8f1c13;
+}
+
+.bloque-tiktoks {
+    margin-top: 28px;
+}
+
+.lista-tiktoks-publicos {
+    display: grid;
+    gap: 12px;
+}
+
+.tarjeta-tiktok-publica {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--borde);
+    border-radius: 13px;
+    background: var(--superficie-secundaria);
+    color: inherit;
+    text-decoration: none;
+}
+
+.tarjeta-tiktok-publica:hover {
+    border-color: var(--primario);
+    transform: translateY(-1px);
+}
+
+.icono-tiktok {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #111;
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 900;
+}
+
+.tarjeta-tiktok-publica small {
+    display: block;
+    margin-top: 4px;
+    color: var(--texto-suave);
+}
+
+@media (max-width: 850px) {
+    .rejilla-admin {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tarjeta-video-admin {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 520px) {
+    .rejilla-admin {
+        grid-template-columns: 1fr;
+    }
+}
+
+.rejilla-tiktoks-embed {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(325px, 1fr)
+    );
+    gap: 22px;
+    align-items: start;
+}
+
+.tarjeta-tiktok-embed {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid var(--borde);
+    border-radius: 15px;
+    background: var(--superficie-secundaria);
+    overflow: hidden;
+}
+
+.tarjeta-tiktok-embed h3 {
+    justify-self: stretch;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.tarjeta-tiktok-embed .tiktok-embed {
+    margin: 0 auto !important;
+}
+
+@media (max-width: 420px) {
+    .rejilla-tiktoks-embed {
+        grid-template-columns: 1fr;
+    }
+
+    .tarjeta-tiktok-embed {
+        padding: 10px;
+    }
+
+    .tarjeta-tiktok-embed .tiktok-embed {
+        min-width: 280px !important;
+    }
+}

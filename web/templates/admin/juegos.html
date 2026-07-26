@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Juegos | Admin</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera cabecera-ludoteca">
+        <div class="contenedor">
+            <nav class="navegacion-principal">
+                <a href="/" class="marca-navegacion">
+                    Recomendador BGG
+                </a>
+
+                <div class="acciones-navegacion">
+                    <a href="/admin" class="boton-navegacion">
+                        Admin
+                    </a>
+
+                    <a href="/admin/usuarios" class="boton-navegacion">
+                        Usuarios
+                    </a>
+
+                    <a href="/" class="boton-navegacion">
+                        Recomendador
+                    </a>
+                </div>
+            </nav>
+
+            <p class="etiqueta-superior">ADMINISTRACIÓN</p>
+            <h1>TikToks por juego</h1>
+            <p class="descripcion-cabecera">
+                Busca un juego y añade enlaces de vídeos de TikTok
+                a su ficha pública.
+            </p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        <section class="panel-formulario">
+            <form
+                action="/admin/juegos"
+                method="get"
+                class="formulario-busqueda"
+            >
+                <div class="campo-busqueda">
+                    <input
+                        type="search"
+                        name="q"
+                        placeholder="Buscar juego..."
+                        value="{{ q }}"
+                        required
+                    >
+
+                    <button type="submit" class="boton-principal">
+                        Buscar
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        {% if q %}
+            <section class="seccion-resultados">
+                <div class="titulo-seccion">
+                    <div>
+                        <p class="numero-paso">RESULTADOS</p>
+                        <h2>Resultados para “{{ q }}”</h2>
+                    </div>
+
+                    <span class="contador-resultados">
+                        {{ juegos|length }} juegos
+                    </span>
+                </div>
+
+                {% if juegos %}
+                    <div class="rejilla-juegos">
+                        {% for juego in juegos %}
+                            <article class="tarjeta-juego">
+                                <div class="contenedor-imagen">
+                                    {% if juego.imagen_url %}
+                                        <img
+                                            src="{{ juego.imagen_url }}"
+                                            alt="Portada de {{ juego.nombre }}"
+                                            loading="lazy"
+                                        >
+                                    {% else %}
+                                        <div class="sin-imagen">
+                                            Sin imagen
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="contenido-tarjeta">
+                                    <h3>{{ juego.nombre }}</h3>
+
+                                    {% if juego.anio_publicacion %}
+                                        <p class="texto-suave">
+                                            {{ juego.anio_publicacion }}
+                                        </p>
+                                    {% endif %}
+
+                                    <p class="texto-suave">
+                                        TikToks asociados:
+                                        {{ juego.total_videos }}
+                                    </p>
+
+                                    <a
+                                        href="/admin/juegos/{{ juego.id_bgg }}/videos"
+                                        class="enlace-detalle"
+                                    >
+                                        Gestionar TikToks
+                                    </a>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="sin-resultados">
+                        <h3>No se encontraron juegos</h3>
+                    </div>
+                {% endif %}
+            </section>
+        {% endif %}
+    </main>
+</body>
+</html>

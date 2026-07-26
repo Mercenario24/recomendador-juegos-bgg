@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel admin | Recomendador BGG</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera cabecera-ludoteca">
+        <div class="contenedor">
+            <nav class="navegacion-principal">
+                <a href="/" class="marca-navegacion">
+                    Recomendador BGG
+                </a>
+
+                <div class="acciones-navegacion">
+                    <a href="/" class="boton-navegacion">
+                        Recomendador
+                    </a>
+
+                    <a href="/mi-ludoteca" class="boton-navegacion">
+                        Mi ludoteca
+                    </a>
+
+                    <a href="/admin" class="boton-navegacion">
+                        Admin
+                    </a>
+                </div>
+            </nav>
+
+            <p class="etiqueta-superior">ADMINISTRACIÓN</p>
+            <h1>Panel de administrador</h1>
+            <p class="descripcion-cabecera">
+                Control de usuarios y contenido asociado a juegos.
+            </p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        <section class="panel-formulario">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="numero-paso">RESUMEN</p>
+                    <h2>Estado del sistema</h2>
+                </div>
+            </div>
+
+            <div class="rejilla-admin">
+                <article class="tarjeta-admin">
+                    <span>Usuarios</span>
+                    <strong>{{ estadisticas.total_usuarios }}</strong>
+                </article>
+
+                <article class="tarjeta-admin">
+                    <span>Usuarios activos</span>
+                    <strong>{{ estadisticas.usuarios_activos }}</strong>
+                </article>
+
+                <article class="tarjeta-admin">
+                    <span>Juegos</span>
+                    <strong>{{ estadisticas.total_juegos }}</strong>
+                </article>
+
+                <article class="tarjeta-admin">
+                    <span>Vídeos TikTok</span>
+                    <strong>{{ estadisticas.total_videos }}</strong>
+                </article>
+            </div>
+
+            <div class="acciones-admin">
+                <a href="/admin/usuarios" class="boton-principal">
+                    Gestionar usuarios
+                </a>
+
+                <a href="/admin/juegos" class="boton-secundario">
+                    Gestionar TikToks por juego
+                </a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
