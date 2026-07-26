@@ -1708,3 +1708,33 @@ select:focus {
         width: 100%;
     }
 }
+
+.resultado-importacion-admin {
+    margin-top: 28px;
+}
+
+.resumen-subida-juegos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.resumen-subida-juegos p {
+    margin: 0;
+    padding: 14px;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    background: var(--superficie-secundaria);
+}
+
+.ayuda-campo {
+    display: block;
+    margin-top: 8px;
+    color: var(--texto-suave);
+    font-size: 0.85rem;
+}
+
+.texto-suave {
+    color: var(--texto-suave);
+}

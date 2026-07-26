@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Subir juegos | Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera cabecera-ludoteca">
+        <div class="contenedor">
+            <nav class="navegacion-principal">
+                <a href="/" class="marca-navegacion">
+                    Recomendador BGG
+                </a>
+
+                <div class="acciones-navegacion">
+                    <a href="/admin" class="boton-navegacion">
+                        Panel admin
+                    </a>
+
+                    <a href="/admin/usuarios" class="boton-navegacion">
+                        Usuarios
+                    </a>
+
+                    <a href="/admin/juegos" class="boton-navegacion">
+                        Juegos
+                    </a>
+
+                    <a href="/admin/soporte" class="boton-navegacion">
+                        Soporte
+                    </a>
+
+                    <a href="/" class="boton-navegacion">
+                        Web
+                    </a>
+
+                    <form
+                        action="/cerrar-sesion"
+                        method="post"
+                    >
+                        <button
+                            type="submit"
+                            class="boton-navegacion"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </nav>
+
+            <p class="etiqueta-superior">
+                ADMINISTRACIÓN
+            </p>
+
+            <h1>Subir juegos nuevos</h1>
+
+            <p class="descripcion-cabecera">
+                Introduce IDs de BoardGameGeek para descargar y guardar
+                juegos que todavía no estén en la base de datos.
+            </p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        {% if error %}
+            <div class="mensaje-error">
+                <strong>No se pudieron importar los juegos</strong>
+                <span>{{ error }}</span>
+            </div>
+        {% endif %}
+
+        <section class="panel-formulario">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="numero-paso">
+                        NUEVOS JUEGOS
+                    </p>
+
+                    <h2>Añadir por IDs de BGG</h2>
+                </div>
+            </div>
+
+            <form
+                action="/admin/juegos/subir"
+                method="post"
+                class="formulario-soporte"
+            >
+                <div class="campo">
+                    <label for="ids_juegos">
+                        IDs de BoardGameGeek
+                    </label>
+
+                    <textarea
+                        id="ids_juegos"
+                        name="ids_juegos"
+                        rows="10"
+                        placeholder="Ejemplo:&#10;174430&#10;161936&#10;224517"
+                        required
+                    >{{ valores.ids_juegos }}</textarea>
+
+                    <small class="ayuda-campo">
+                        Puedes ponerlos separados por saltos de línea,
+                        comas, espacios o pegando enlaces de BGG.
+                    </small>
+                </div>
+
+                <button
+                    type="submit"
+                    class="boton-principal"
+                >
+                    Descargar juegos nuevos
+                </button>
+            </form>
+        </section>
+
+        {% if resultado %}
+            <section class="panel-formulario resultado-importacion-admin">
+                <div class="titulo-seccion">
+                    <div>
+                        <p class="numero-paso">
+                            RESULTADO
+                        </p>
+
+                        <h2>Resumen de importación</h2>
+                    </div>
+                </div>
+
+                <div class="resumen-subida-juegos">
+                    <p>
+                        <strong>IDs recibidos:</strong>
+                        {{ resultado.ids_recibidos|length }}
+                    </p>
+
+                    <p>
+                        <strong>Ya existían:</strong>
+                        {{ resultado.ids_existentes|length }}
+                    </p>
+
+                    <p>
+                        <strong>Nuevos detectados:</strong>
+                        {{ resultado.ids_pendientes|length }}
+                    </p>
+
+                    <p>
+                        <strong>Guardados correctamente:</strong>
+                        {{ resultado.juegos_guardados|length }}
+                    </p>
+
+                    <p>
+                        <strong>No descargados:</strong>
+                        {{ resultado.ids_no_descargados|length }}
+                    </p>
+                </div>
+
+                {% if resultado.juegos_guardados %}
+                    <h3>Juegos guardados</h3>
+
+                    <div class="tabla-admin-contenedor">
+                        <table class="tabla-admin">
+                            <thead>
+                                <tr>
+                                    <th>ID BGG</th>
+                                    <th>Nombre</th>
+                                    <th>Ficha</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for juego in resultado.juegos_guardados %}
+                                    <tr>
+                                        <td>{{ juego.id_bgg }}</td>
+                                        <td>{{ juego.nombre }}</td>
+                                        <td>
+                                            <a href="/juego/{{ juego.id_bgg }}">
+                                                Ver ficha
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+
+                {% if resultado.ids_existentes %}
+                    <h3>Juegos que ya estaban en la base de datos</h3>
+
+                    <p class="texto-suave">
+                        {{ resultado.ids_existentes|join(", ") }}
+                    </p>
+                {% endif %}
+
+                {% if resultado.ids_no_descargados %}
+                    <h3>IDs no descargados</h3>
+
+                    <p class="texto-suave">
+                        {{ resultado.ids_no_descargados|join(", ") }}
+                    </p>
+                {% endif %}
+
+                {% if resultado.errores %}
+                    <h3>Errores</h3>
+
+                    <div class="mensaje-error">
+                        {% for error in resultado.errores %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </section>
+        {% endif %}
+    </main>
+
+    {% include "componentes/footer.html" %}
+</body>
+</html>

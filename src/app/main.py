@@ -46,6 +46,7 @@ from app.services.bgg_api import obtener_juegos_por_ids
 from app.services.parser_bgg import parsear_juegos
 from app.services.importador_ludoteca import leer_archivo_ludoteca
 from app.admin.administracion import preparar_tablas_admin
+from app.admin.importar_juegos import importar_juegos_admin
 
 from app.admin.administracion import (
     buscar_juegos_admin,
@@ -1111,6 +1112,85 @@ async def admin_juegos(
         }
     )
 
+@app.get("/admin/juegos/subir", response_class=HTMLResponse)
+async def mostrar_subir_juegos_admin(request: Request):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    resultado = request.session.pop(
+        "resultado_subida_juegos",
+        None
+    )
+
+    error = request.session.pop(
+        "error_subida_juegos",
+        None
+    )
+
+    valores = request.session.pop(
+        "valores_subida_juegos",
+        {
+            "ids_juegos": ""
+        }
+    )
+
+    return plantillas.TemplateResponse(
+        request=request,
+        name="admin/subir_juegos.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "resultado": resultado,
+            "error": error,
+            "valores": valores
+        }
+    )
+
+
+@app.post("/admin/juegos/subir")
+async def subir_juegos_admin(
+    request: Request,
+    ids_juegos: str = Form(...)
+):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    try:
+        resultado = importar_juegos_admin(ids_juegos)
+
+        request.session["resultado_subida_juegos"] = resultado
+
+    except ValueError as error:
+        request.session["error_subida_juegos"] = str(error)
+        request.session["valores_subida_juegos"] = {
+            "ids_juegos": ids_juegos
+        }
+
+    except Exception as error:
+        print(f"Error subiendo juegos desde admin: {error}")
+
+        request.session["error_subida_juegos"] = (
+            "Se ha producido un error al importar los juegos."
+        )
+
+        request.session["valores_subida_juegos"] = {
+            "ids_juegos": ids_juegos
+        }
+
+    return RedirectResponse(
+        url="/admin/juegos/subir",
+        status_code=303
+    )
 
 @app.get(
     "/admin/juegos/{id_bgg}/videos",
