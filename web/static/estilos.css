@@ -327,6 +327,7 @@ select:focus {
     color: white;
     font-weight: 800;
     cursor: pointer;
+    text-decoration: none;
     transition:
         background 160ms ease,
         transform 160ms ease;
