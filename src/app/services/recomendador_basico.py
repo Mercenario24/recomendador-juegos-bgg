@@ -1,4 +1,5 @@
 from app.database.base_datos import crear_conexion
+import unicodedata
 
 
 def limpiar_lista_texto(texto):
@@ -214,12 +215,173 @@ def calcular_puntuacion(
 
     return round(puntuacion, 2), motivos
 
+def normalizar_texto(texto):
+    texto = str(texto or "").lower().strip()
+
+    texto = "".join(
+        caracter
+        for caracter in unicodedata.normalize("NFD", texto)
+        if unicodedata.category(caracter) != "Mn"
+    )
+
+    return texto
+
+
+def convertir_a_lista(valor):
+    if valor is None:
+        return []
+
+    if isinstance(valor, list):
+        return valor
+
+    return [
+        parte.strip()
+        for parte in str(valor).split(",")
+        if parte.strip()
+    ]
+
+
+REGLAS_TIPOS_JUEGO = {
+    "estrategia": [
+        "strategy",
+        "economic",
+        "civilization",
+        "territory building",
+        "worker placement",
+        "action points",
+        "area majority",
+        "area control",
+        "hand management",
+        "variable player powers",
+        "network and route building"
+    ],
+    "tematico": [
+        "thematic",
+        "adventure",
+        "fantasy",
+        "science fiction",
+        "horror",
+        "fighting",
+        "exploration",
+        "miniatures",
+        "scenario",
+        "narrative",
+        "role playing"
+    ],
+    "familiar": [
+        "family",
+        "children",
+        "educational",
+        "animals",
+        "dice",
+        "memory",
+        "pattern recognition",
+        "party"
+    ],
+    "abstracto": [
+        "abstract",
+        "abstract strategy",
+        "grid movement",
+        "pattern building",
+        "pattern recognition",
+        "tile placement"
+    ],
+    "party": [
+        "party",
+        "humor",
+        "bluffing",
+        "acting",
+        "deduction",
+        "real-time",
+        "word game"
+    ],
+    "cooperativo": [
+        "cooperative",
+        "cooperative game",
+        "team-based",
+        "communication limits",
+        "traitor game"
+    ],
+    "cartas": [
+        "card game",
+        "deck",
+        "hand management",
+        "deck bag and pool building",
+        "trick-taking",
+        "set collection"
+    ],
+    "eurogame": [
+        "economic",
+        "farming",
+        "industry",
+        "worker placement",
+        "resource management",
+        "auction",
+        "tile placement",
+        "contracts",
+        "network and route building"
+    ],
+    "wargame": [
+        "wargame",
+        "war",
+        "world war",
+        "civil war",
+        "napoleonic",
+        "hexagon grid",
+        "simulation",
+        "campaign",
+        "combat"
+    ]
+}
+
+
+def obtener_texto_clasificacion_juego(juego):
+    categorias = convertir_a_lista(
+        juego.get("categorias")
+    )
+
+    mecanicas = convertir_a_lista(
+        juego.get("mecanicas")
+    )
+
+    partes = []
+
+    partes.extend(categorias)
+    partes.extend(mecanicas)
+    partes.append(juego.get("nombre", ""))
+    partes.append(juego.get("descripcion", ""))
+
+    return normalizar_texto(
+        " ".join(str(parte) for parte in partes)
+    )
+
+
+def juego_coincide_con_tipo(juego, tipo_juego):
+    tipo_juego = normalizar_texto(tipo_juego)
+
+    if not tipo_juego:
+        return True
+
+    palabras_clave = REGLAS_TIPOS_JUEGO.get(tipo_juego)
+
+    if not palabras_clave:
+        return True
+
+    texto_juego = obtener_texto_clasificacion_juego(juego)
+
+    for palabra_clave in palabras_clave:
+        if normalizar_texto(palabra_clave) in texto_juego:
+            return True
+
+    return False
+
 def recomendar_juegos(
     num_jugadores=None,
     duracion_maxima=120,
     complejidad_maxima=3.5,
     mecanicas_preferidas=None,
     categorias_preferidas=None,
+    tipo_juego=None,
     solo_rango_recomendado=False,
     limite=10,
     num_jugadores_min=None,
@@ -342,6 +504,16 @@ def recomendar_juegos(
         if solo_rango_recomendado and cobertura_recomendada < 1:
             continue
 
+        categorias_juego = obtener_categorias_de_juego(
+            cursor,
+            id_bgg
+        )
+
+        mecanicas_juego = obtener_mecanicas_de_juego(
+            cursor,
+            id_bgg
+        )
+
         juego = {
             "id_bgg": id_bgg,
             "nombre": nombre,
@@ -360,15 +532,12 @@ def recomendar_juegos(
             "complejidad": complejidad,
             "valoracion_media": valoracion_media,
             "imagen_url": imagen_url,
-            "categorias": obtener_categorias_de_juego(
-                cursor,
-                id_bgg
-            ),
-            "mecanicas": obtener_mecanicas_de_juego(
-                cursor,
-                id_bgg
-            )
+            "categorias": categorias_juego,
+            "mecanicas": mecanicas_juego
         }
+
+        if not juego_coincide_con_tipo(juego, tipo_juego):
+            continue
 
         puntuacion, motivos = calcular_puntuacion(
             juego=juego,

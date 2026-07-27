@@ -308,6 +308,33 @@
                             {% endfor %}
                         </select>
                     </div>
+
+                    <div class="campo">
+                        <label for="tipo_juego">
+                            Tipo de juego
+                        </label>
+
+                        <p class="ayuda-campo">
+                            Tipo de juego que se quiere mostrar
+                        </p>
+
+                        <select
+                            id="tipo_juego"
+                            name="tipo_juego"
+                        >
+                            {% for tipo in tipos_juego %}
+                                <option
+                                    value="{{ tipo.valor }}"
+                                    {% if valores.tipo_juego == tipo.valor %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ tipo.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
                 </div>
 
                 <label class="opcion-destacada">
@@ -365,6 +392,8 @@
                         </small>
                     </span>
                 </label>
+
+                
 
                 <details class="grupo-opciones">
                     <summary>
@@ -435,6 +464,8 @@
                         {% endfor %}
                     </div>
                 </details>
+
+
 
                 <button type="submit" class="boton-principal">
                     Buscar juegos recomendados

@@ -13,7 +13,8 @@ from fastapi import (
 
 from app.forms.opciones_formulario import (
     obtener_categorias_populares,
-    obtener_mecanicas_populares
+    obtener_mecanicas_populares,
+    obtener_tipos_juego
 )
 
 from app.services.recomendador_basico import recomendar_juegos
@@ -374,10 +375,11 @@ async def importar_mi_ludoteca(
     )
 
 def obtener_opciones():
-    mecanicas = obtener_mecanicas_populares(limite=25)
-    categorias = obtener_categorias_populares(limite=25)
+    mecanicas = obtener_mecanicas_populares(limite=50)
+    categorias = obtener_categorias_populares(limite=50)
+    tipos_juego = obtener_tipos_juego()
 
-    return mecanicas, categorias
+    return mecanicas, categorias, tipos_juego
 
 
 def obtener_valores_iniciales():
@@ -392,7 +394,8 @@ def obtener_valores_iniciales():
         "solo_rango_recomendado": False,
         "solo_ludoteca": False,
         "mecanicas_seleccionadas": [],
-        "categorias_seleccionadas": []
+        "categorias_seleccionadas": [],
+        "tipo_juego": ""
     }
 
 def obtener_usuario_actual(request):
@@ -434,14 +437,19 @@ def crear_contexto(
     error=None,
     formulario_enviado=False
 ):
-    mecanicas, categorias = obtener_opciones()
+    mecanicas, categorias, tipos_juego = obtener_opciones()
+
+    if valores is None:
+        valores = obtener_valores_iniciales()
 
     return {
         "request": request,
         "usuario": obtener_usuario_actual(request),
         "mecanicas": mecanicas,
         "categorias": categorias,
-        "valores": valores or obtener_valores_iniciales(),
+        "tipos_juego": tipos_juego,
+        "tipo_juego_seleccionado": valores.get("tipo_juego", ""),
+        "valores": valores,
         "juegos": juegos or [],
         "error": error,
         "formulario_enviado": formulario_enviado
@@ -692,7 +700,19 @@ async def procesar_recomendacion(request: Request):
     usuario = obtener_usuario_actual(request)
     formulario = await request.form()
 
-    mecanicas_disponibles, categorias_disponibles = obtener_opciones()
+    mecanicas_disponibles, categorias_disponibles, tipos_juego = obtener_opciones()
+
+    tipos_validos = {
+        tipo["valor"]
+        for tipo in tipos_juego
+    }
+
+    tipo_juego = str(
+        formulario.get("tipo_juego", "")
+    ).strip().lower()
+
+    if tipo_juego not in tipos_validos:
+        tipo_juego = ""
 
     mecanicas_seleccionadas = filtrar_opciones_validas(
         formulario.getlist("mecanicas"),
@@ -740,7 +760,8 @@ async def procesar_recomendacion(request: Request):
         "mecanicas_seleccionadas":
             mecanicas_seleccionadas,
         "categorias_seleccionadas":
-            categorias_seleccionadas
+            categorias_seleccionadas,
+        "tipo_juego": tipo_juego,
     }
 
     try:
@@ -801,7 +822,7 @@ async def procesar_recomendacion(request: Request):
             valores["limite_resultados"],
             "Cantidad de resultados",
             minimo=1,
-            maximo=30
+            maximo=60
         )
 
         limites_permitidos = {
@@ -853,6 +874,7 @@ async def procesar_recomendacion(request: Request):
             complejidad_maxima=complejidad_maxima,
             mecanicas_preferidas=mecanicas_seleccionadas,
             categorias_preferidas=categorias_seleccionadas,
+            tipo_juego=valores["tipo_juego"],
             solo_rango_recomendado=valores[
                 "solo_rango_recomendado"
             ],
