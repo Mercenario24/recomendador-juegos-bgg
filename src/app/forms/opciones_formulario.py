@@ -84,20 +84,12 @@ def obtener_tipos_juego():
             "nombre": "Party"
         },
         {
-            "valor": "cooperativo",
-            "nombre": "Cooperativo"
-        },
-        {
-            "valor": "cartas",
-            "nombre": "Cartas"
-        },
-        {
-            "valor": "eurogame",
-            "nombre": "Eurogame"
-        },
-        {
             "valor": "wargame",
             "nombre": "Wargame"
+        },
+        {
+            "valor": "infantil",
+            "nombre": "Infantil"
         }
     ]
 

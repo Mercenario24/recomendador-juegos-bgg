@@ -356,24 +356,19 @@ def obtener_texto_clasificacion_juego(juego):
     )
 
 
-def juego_coincide_con_tipo(juego, tipo_juego):
-    tipo_juego = normalizar_texto(tipo_juego)
+def juego_coincide_con_tipo_bgg(tipos_bgg, tipo_juego):
+    tipo_juego = str(tipo_juego or "").strip().lower()
 
     if not tipo_juego:
         return True
 
-    palabras_clave = REGLAS_TIPOS_JUEGO.get(tipo_juego)
+    tipos = {
+        tipo.strip().lower()
+        for tipo in str(tipos_bgg or "").split(",")
+        if tipo.strip()
+    }
 
-    if not palabras_clave:
-        return True
-
-    texto_juego = obtener_texto_clasificacion_juego(juego)
-
-    for palabra_clave in palabras_clave:
-        if normalizar_texto(palabra_clave) in texto_juego:
-            return True
-
-    return False
+    return tipo_juego in tipos
 
 def recomendar_juegos(
     num_jugadores=None,
@@ -433,7 +428,8 @@ def recomendar_juegos(
             j.duracion_maxima,
             j.complejidad,
             j.valoracion_media,
-            j.imagen_url
+            j.imagen_url,
+            j.tipos_bgg
         FROM juegos j
     """
 
@@ -491,9 +487,9 @@ def recomendar_juegos(
             duracion_maxima_juego,
             complejidad,
             valoracion_media,
-            imagen_url
+            imagen_url,
+            tipos_bgg
         ) = fila
-
         cobertura_recomendada = calcular_cobertura_rango(
             num_jugadores_min,
             num_jugadores_max,
@@ -533,10 +529,11 @@ def recomendar_juegos(
             "valoracion_media": valoracion_media,
             "imagen_url": imagen_url,
             "categorias": categorias_juego,
-            "mecanicas": mecanicas_juego
+            "mecanicas": mecanicas_juego,
+            "tipos_bgg": tipos_bgg
         }
 
-        if not juego_coincide_con_tipo(juego, tipo_juego):
+        if not juego_coincide_con_tipo_bgg(tipos_bgg, tipo_juego):
             continue
 
         puntuacion, motivos = calcular_puntuacion(

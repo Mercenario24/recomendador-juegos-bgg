@@ -20,6 +20,7 @@ from app.forms.opciones_formulario import (
 from app.services.recomendador_basico import recomendar_juegos
 
 from app.database.base_datos import (
+    asegurar_columnas_rankings_bgg,
     buscar_juegos_por_nombre,
     guardar_juego,
     obtener_detalle_juego
@@ -152,6 +153,7 @@ asegurar_columnas_usuarios()
 crear_tablas_ludoteca()
 preparar_tablas_admin()
 crear_tabla_mensajes_soporte()
+asegurar_columnas_rankings_bgg()
 
 app.mount(
     "/static",
