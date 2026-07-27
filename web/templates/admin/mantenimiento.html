@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Mantenimiento | Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/estilos.css') }}"
+    >
+</head>
+
+<body>
+    <header class="cabecera cabecera-ludoteca">
+        <div class="contenedor">
+            <nav class="navegacion-principal">
+                <a href="/" class="marca-navegacion">
+                    Recomendador BGG
+                </a>
+
+                <div class="acciones-navegacion">
+                    <a href="/admin" class="boton-navegacion">
+                        Panel admin
+                    </a>
+
+                    <a href="/admin/usuarios" class="boton-navegacion">
+                        Usuarios
+                    </a>
+
+                    <a href="/admin/juegos" class="boton-navegacion">
+                        Juegos
+                    </a>
+
+                    <a href="/admin/soporte" class="boton-navegacion">
+                        Soporte
+                    </a>
+
+                    <a href="/" class="boton-navegacion">
+                        Web
+                    </a>
+
+                    <form
+                        action="/cerrar-sesion"
+                        method="post"
+                    >
+                        <button
+                            type="submit"
+                            class="boton-navegacion"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </nav>
+
+            <p class="etiqueta-superior">
+                ADMINISTRACIÓN
+            </p>
+
+            <h1>Modo mantenimiento</h1>
+
+            <p class="descripcion-cabecera">
+                Activa esta opción cuando vayas a hacer cambios importantes en la web.
+            </p>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        <section class="panel-formulario">
+            <div class="titulo-seccion">
+                <div>
+                    <p class="numero-paso">
+                        ESTADO ACTUAL
+                    </p>
+
+                    <h2>
+                        {% if estado_mantenimiento.activo %}
+                            Mantenimiento activado
+                        {% else %}
+                            Mantenimiento desactivado
+                        {% endif %}
+                    </h2>
+                </div>
+            </div>
+
+            {% if estado_mantenimiento.activo %}
+                <div class="mensaje-error">
+                    <strong>La web está en mantenimiento</strong>
+                    <span>
+                        Los usuarios verán la pantalla de mantenimiento hasta que lo desactives.
+                    </span>
+                </div>
+            {% else %}
+                <div class="mensaje-exito">
+                    La web está funcionando con normalidad.
+                </div>
+            {% endif %}
+
+            <form
+                action="/admin/mantenimiento"
+                method="post"
+                class="formulario-soporte"
+            >
+                <label class="opcion-mantenimiento">
+                    <input
+                        type="checkbox"
+                        name="activo"
+                        {% if estado_mantenimiento.activo %}checked{% endif %}
+                    >
+
+                    <span>Activar modo mantenimiento</span>
+                </label>
+
+                <div class="campo">
+                    <label for="titulo">
+                        Título de la pantalla
+                    </label>
+
+                    <input
+                        type="text"
+                        id="titulo"
+                        name="titulo"
+                        value="{{ estado_mantenimiento.titulo }}"
+                        required
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="mensaje">
+                        Mensaje para los usuarios
+                    </label>
+
+                    <textarea
+                        id="mensaje"
+                        name="mensaje"
+                        rows="5"
+                        required
+                    >{{ estado_mantenimiento.mensaje }}</textarea>
+                </div>
+
+                <button
+                    type="submit"
+                    class="boton-principal"
+                >
+                    Guardar estado
+                </button>
+            </form>
+        </section>
+    </main>
+
+    {% include "componentes/footer.html" %}
+</body>
+</html>

@@ -63,6 +63,11 @@ from app.admin.administracion import (
     preparar_tablas_admin
 )
 
+from app.admin.mantenimiento import (
+    guardar_estado_mantenimiento,
+    obtener_estado_mantenimiento
+)
+
 from dotenv import load_dotenv
 from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
@@ -108,6 +113,38 @@ app.add_middleware(
         same_site="lax",
         https_only=False
     )
+
+
+@app.middleware("http")
+async def comprobar_mantenimiento(request: Request, call_next):
+    estado_mantenimiento = obtener_estado_mantenimiento()
+
+    if not estado_mantenimiento["activo"]:
+        return await call_next(request)
+
+    ruta = request.url.path
+
+    for ruta_permitida in RUTAS_PERMITIDAS_MANTENIMIENTO:
+        if ruta.startswith(ruta_permitida):
+            return await call_next(request)
+
+    return plantillas.TemplateResponse(
+        request=request,
+        name="mantenimiento.html",
+        context={
+            "request": request,
+            "titulo": estado_mantenimiento["titulo"],
+            "mensaje": estado_mantenimiento["mensaje"]
+        },
+        status_code=503
+    )
+
+RUTAS_PERMITIDAS_MANTENIMIENTO = (
+    "/static",
+    "/iniciar-sesion",
+    "/cerrar-sesion",
+    "/admin/mantenimiento"
+)
 
 crear_tabla_usuarios()
 asegurar_columnas_usuarios()
@@ -1318,6 +1355,55 @@ async def borrar_video_tiktok(
 
     return RedirectResponse(
         url=f"/admin/juegos/{juego_id}/videos",
+        status_code=303
+    )
+
+@app.get("/admin/mantenimiento", response_class=HTMLResponse)
+async def mostrar_mantenimiento_admin(request: Request):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    estado_mantenimiento = obtener_estado_mantenimiento()
+
+    return plantillas.TemplateResponse(
+        request=request,
+        name="admin/mantenimiento.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "estado_mantenimiento": estado_mantenimiento
+        }
+    )
+
+
+@app.post("/admin/mantenimiento")
+async def actualizar_mantenimiento_admin(
+    request: Request,
+    activo: str = Form(None),
+    titulo: str = Form(...),
+    mensaje: str = Form(...)
+):
+    usuario = obtener_admin_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    guardar_estado_mantenimiento(
+        activo=activo == "on",
+        titulo=titulo,
+        mensaje=mensaje
+    )
+
+    return RedirectResponse(
+        url="/admin/mantenimiento",
         status_code=303
     )
 
