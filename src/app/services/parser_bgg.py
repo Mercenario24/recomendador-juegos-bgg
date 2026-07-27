@@ -212,6 +212,96 @@ def extraer_recomendacion_jugadores(item, max_jugadores_oficial):
         "max_mejor_num_jugadores": max_mejor_num_jugadores
     }
 
+MAPA_RANKINGS_TIPOS_BGG = {
+    "strategygames": {
+        "tipo": "estrategia",
+        "campo": "ranking_estrategia"
+    },
+    "familygames": {
+        "tipo": "familiar",
+        "campo": "ranking_familiar"
+    },
+    "thematic": {
+        "tipo": "tematico",
+        "campo": "ranking_tematico"
+    },
+    "abstracts": {
+        "tipo": "abstracto",
+        "campo": "ranking_abstracto"
+    },
+    "partygames": {
+        "tipo": "party",
+        "campo": "ranking_party"
+    },
+    "wargames": {
+        "tipo": "wargame",
+        "campo": "ranking_wargame"
+    },
+    "childrensgames": {
+        "tipo": "infantil",
+        "campo": "ranking_infantil"
+    }
+}
+
+
+def convertir_ranking(valor):
+    if valor is None:
+        return None
+
+    valor = str(valor).strip()
+
+    if not valor or valor.lower() == "not ranked":
+        return None
+
+    try:
+        return int(valor)
+    except ValueError:
+        return None
+
+
+def extraer_rankings_bgg(item):
+    datos_rankings = {
+        "ranking_general": None,
+        "ranking_estrategia": None,
+        "ranking_familiar": None,
+        "ranking_tematico": None,
+        "ranking_abstracto": None,
+        "ranking_party": None,
+        "ranking_wargame": None,
+        "ranking_infantil": None,
+        "tipos_bgg": ""
+    }
+
+    tipos_detectados = []
+
+    for rank in item.findall(".//statistics/ratings/ranks/rank"):
+        nombre_ranking = rank.attrib.get("name", "")
+        valor_ranking = convertir_ranking(
+            rank.attrib.get("value")
+        )
+
+        if nombre_ranking == "boardgame":
+            datos_rankings["ranking_general"] = valor_ranking
+            continue
+
+        datos_tipo = MAPA_RANKINGS_TIPOS_BGG.get(nombre_ranking)
+
+        if datos_tipo is None:
+            continue
+
+        campo = datos_tipo["campo"]
+        tipo = datos_tipo["tipo"]
+
+        datos_rankings[campo] = valor_ranking
+
+        if valor_ranking is not None:
+            tipos_detectados.append(tipo)
+
+    datos_rankings["tipos_bgg"] = ",".join(
+        sorted(set(tipos_detectados))
+    )
+
+    return datos_rankings
 
 def parsear_juegos(xml_texto):
     raiz = ET.fromstring(xml_texto)
@@ -255,6 +345,8 @@ def parsear_juegos(xml_texto):
             item,
             max_jugadores
         )
+        
+        rankings_bgg = extraer_rankings_bgg(item)
 
         juego = {
             "id_bgg": id_bgg,
@@ -294,9 +386,20 @@ def parsear_juegos(xml_texto):
                 item,
                 "boardgamemechanic"
             ),
-            "imagen_url": item.findtext("image")
+            "imagen_url": item.findtext("image"),
+            "tipos_bgg": rankings_bgg["tipos_bgg"],
+            "ranking_general": rankings_bgg["ranking_general"],
+            "ranking_estrategia": rankings_bgg["ranking_estrategia"],
+            "ranking_familiar": rankings_bgg["ranking_familiar"],
+            "ranking_tematico": rankings_bgg["ranking_tematico"],
+            "ranking_abstracto": rankings_bgg["ranking_abstracto"],
+            "ranking_party": rankings_bgg["ranking_party"],
+            "ranking_wargame": rankings_bgg["ranking_wargame"],
+            "ranking_infantil": rankings_bgg["ranking_infantil"]
         }
+
 
         juegos.append(juego)
 
     return juegos
+
