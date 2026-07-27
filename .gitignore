@@ -1,5 +1,11 @@
 .env
+.venv/
 __pycache__/
-*.pyc
+
 datos/juegos.db
 datos/*.db
+datos/*.db-wal
+datos/*.db-shm
+datos/*.sqlite
+datos/*.sqlite3
+datos/juegos_backup_*.db
