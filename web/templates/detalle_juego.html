@@ -59,6 +59,32 @@
                 >
                     Ver en BoardGameGeek ↗
                 </a>
+                
+                {% if usuario %}
+                    {% if juego.en_ludoteca %}
+                        <form
+                            action="/juegos/{{ juego.id_bgg }}/eliminar-ludoteca"
+                            method="post"
+                        >
+                            <button type="submit" class="boton-peligro">
+                                Eliminar de mi ludoteca
+                            </button>
+                        </form>
+                    {% else %}
+                        <form
+                            action="/juegos/{{ juego.id_bgg }}/anadir-ludoteca"
+                            method="post"
+                        >
+                            <button type="submit" class="boton-principal">
+                                Añadir a mi ludoteca
+                            </button>
+                        </form>
+                    {% endif %}
+                {% else %}
+                    <a href="/iniciar-sesion" class="boton-principal">
+                        Inicia sesión para añadirlo a tu ludoteca
+                    </a>
+                {% endif %}
             </section>
 
             <section class="detalle-contenido">

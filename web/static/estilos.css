@@ -1790,3 +1790,51 @@ select:focus {
     width: 18px;
     height: 18px;
 }
+
+.aviso-ludoteca {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    background: var(--superficie-secundaria);
+    color: var(--texto-suave);
+    font-weight: 700;
+}
+
+.boton-peligro {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 54px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 12px;
+    background: #dc2626;
+    color: white;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+        background 160ms ease,
+        transform 160ms ease;
+}
+
+.boton-peligro:hover {
+    background: #b91c1c;
+    text-decoration: none;
+}
+
+.acciones-tarjeta-ludoteca {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+.boton-pequeno {
+    min-height: 38px;
+    padding: 0 14px;
+    font-size: 0.9rem;
+}

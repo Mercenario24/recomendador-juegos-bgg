@@ -269,3 +269,59 @@ def obtener_ultima_importacion(usuario_id):
         return None
 
     return dict(importacion)
+
+
+def juego_esta_en_ludoteca(usuario_id, juego_id):
+    conexion = crear_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT 1
+        FROM ludoteca_usuario
+        WHERE usuario_id = ?
+          AND juego_id = ?
+    """, (
+        usuario_id,
+        juego_id
+    ))
+
+    existe = cursor.fetchone() is not None
+
+    conexion.close()
+
+    return existe
+
+
+def anadir_juego_a_ludoteca(usuario_id, juego_id):
+    conexion = crear_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        INSERT OR IGNORE INTO ludoteca_usuario (
+            usuario_id,
+            juego_id
+        )
+        VALUES (?, ?)
+    """, (
+        usuario_id,
+        juego_id
+    ))
+
+    conexion.commit()
+    conexion.close()
+
+def eliminar_juego_de_ludoteca(usuario_id, juego_id):
+    conexion = crear_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        DELETE FROM ludoteca_usuario
+        WHERE usuario_id = ?
+          AND juego_id = ?
+    """, (
+        usuario_id,
+        juego_id
+    ))
+
+    conexion.commit()
+    conexion.close()

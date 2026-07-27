@@ -268,12 +268,27 @@
                                     </p>
                                 </div>
 
-                                <a
-                                    href="/juego/{{ juego.id_bgg }}"
-                                    class="enlace-detalle"
-                                >
-                                    Ver ficha
-                                </a>
+                                <div class="acciones-tarjeta-ludoteca">
+                                    <a
+                                        href="/juego/{{ juego.id_bgg }}"
+                                        class="enlace-detalle"
+                                    >
+                                        Ver ficha
+                                    </a>
+
+                                    <form
+                                        action="/juegos/{{ juego.id_bgg }}/eliminar-ludoteca"
+                                        method="post"
+                                        onsubmit="return confirm('¿Seguro que quieres eliminar este juego de tu ludoteca?');"
+                                    >
+                                        <button
+                                            type="submit"
+                                            class="boton-peligro boton-pequeno"
+                                        >
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </article>
                     {% endfor %}

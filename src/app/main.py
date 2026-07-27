@@ -41,7 +41,10 @@ from app.library.ludoteca import (
     obtener_ids_juegos_inexistentes,
     obtener_ludoteca_usuario,
     obtener_ultima_importacion,
-    registrar_importacion
+    registrar_importacion,
+    anadir_juego_a_ludoteca,
+    juego_esta_en_ludoteca,
+    eliminar_juego_de_ludoteca
 )
 
 from app.services.bgg_api import obtener_juegos_por_ids
@@ -1596,6 +1599,16 @@ async def mostrar_detalle_juego(
             detail="El juego solicitado no existe."
         )
 
+    usuario = obtener_usuario_actual(request)
+
+    if usuario is not None:
+        juego["en_ludoteca"] = juego_esta_en_ludoteca(
+            usuario_id=usuario["id"],
+            juego_id=id_bgg
+        )
+    else:
+        juego["en_ludoteca"] = False
+
     videos_tiktok = obtener_videos_tiktok_publicos(id_bgg)
 
     return plantillas.TemplateResponse(
@@ -1603,7 +1616,58 @@ async def mostrar_detalle_juego(
         name="detalle_juego.html",
         context={
             "request": request,
+            "usuario": usuario,
             "juego": juego,
             "videos_tiktok": videos_tiktok
         }
+    )
+
+@app.post("/juegos/{id_bgg}/anadir-ludoteca")
+async def anadir_juego_ludoteca(
+    request: Request,
+    id_bgg: int
+):
+    usuario = obtener_usuario_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    anadir_juego_a_ludoteca(
+        usuario_id=usuario["id"],
+        juego_id=id_bgg
+    )
+
+    url_origen = request.headers.get("referer") or "/mi-ludoteca"
+
+    return RedirectResponse(
+        url=url_origen,
+        status_code=303
+    )
+
+@app.post("/juegos/{id_bgg}/eliminar-ludoteca")
+async def eliminar_juego_ludoteca(
+    request: Request,
+    id_bgg: int
+):
+    usuario = obtener_usuario_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    eliminar_juego_de_ludoteca(
+        usuario_id=usuario["id"],
+        juego_id=id_bgg
+    )
+
+    url_origen = request.headers.get("referer") or "/mi-ludoteca"
+
+    return RedirectResponse(
+        url=url_origen,
+        status_code=303
     )
