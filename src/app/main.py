@@ -95,6 +95,13 @@ from app.support.soporte import (
     obtener_mensajes_soporte
 )
 
+from app.comments.comentarios import (
+    crear_tabla_comentarios_juego,
+    crear_comentario_juego,
+    obtener_comentarios_juego,
+    eliminar_comentario_juego
+)
+
 
 CLAVE_SESION = os.getenv("SESSION_SECRET")
 
@@ -157,6 +164,7 @@ crear_tablas_ludoteca()
 preparar_tablas_admin()
 crear_tabla_mensajes_soporte()
 asegurar_columnas_rankings_bgg()
+crear_tabla_comentarios_juego()
 
 app.mount(
     "/static",
@@ -1583,11 +1591,8 @@ async def enviar_soporte(
         status_code=303
     )
 
-@app.get(
-    "/juego/{id_bgg}",
-    response_class=HTMLResponse
-)
-async def mostrar_detalle_juego(
+@app.get("/juego/{id_bgg}")
+async def detalle_juego(
     request: Request,
     id_bgg: int
 ):
@@ -1596,7 +1601,7 @@ async def mostrar_detalle_juego(
     if juego is None:
         raise HTTPException(
             status_code=404,
-            detail="El juego solicitado no existe."
+            detail="Juego no encontrado"
         )
 
     usuario = obtener_usuario_actual(request)
@@ -1609,7 +1614,9 @@ async def mostrar_detalle_juego(
     else:
         juego["en_ludoteca"] = False
 
-    videos_tiktok = obtener_videos_tiktok_publicos(id_bgg)
+    videos_tiktok = obtener_videos_tiktok_de_juego(id_bgg)
+
+    comentarios = obtener_comentarios_juego(id_bgg)
 
     return plantillas.TemplateResponse(
         request=request,
@@ -1618,7 +1625,8 @@ async def mostrar_detalle_juego(
             "request": request,
             "usuario": usuario,
             "juego": juego,
-            "videos_tiktok": videos_tiktok
+            "videos_tiktok": videos_tiktok,
+            "comentarios": comentarios
         }
     )
 
@@ -1666,6 +1674,60 @@ async def eliminar_juego_ludoteca(
     )
 
     url_origen = request.headers.get("referer") or "/mi-ludoteca"
+
+    return RedirectResponse(
+        url=url_origen,
+        status_code=303
+    )
+
+@app.post("/juego/{id_bgg}/comentario")
+async def publicar_comentario_juego(
+    request: Request,
+    id_bgg: int,
+    comentario: str = Form("")
+):
+    usuario = obtener_usuario_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    try:
+        crear_comentario_juego(
+            usuario_id=usuario["id"],
+            juego_id=id_bgg,
+            comentario=comentario
+        )
+    except ValueError as error:
+        print(f"Comentario no válido: {error}")
+
+    return RedirectResponse(
+        url=f"/juego/{id_bgg}",
+        status_code=303
+    )
+
+@app.post("/comentarios/{comentario_id}/eliminar")
+async def eliminar_comentario(
+    request: Request,
+    comentario_id: int
+):
+    usuario = obtener_usuario_actual(request)
+
+    if usuario is None:
+        return RedirectResponse(
+            url="/iniciar-sesion",
+            status_code=303
+        )
+
+    eliminar_comentario_juego(
+        comentario_id=comentario_id,
+        usuario_id=usuario["id"],
+        es_admin=bool(usuario.get("es_admin", 0))
+    )
+
+    url_origen = request.headers.get("referer") or "/"
 
     return RedirectResponse(
         url=url_origen,

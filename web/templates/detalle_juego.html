@@ -301,7 +301,105 @@
                         ></script>
                     </section>
                 {% endif %}
+
+                <section class="panel-comentarios">
+                    <div class="titulo-seccion">
+                        <div>
+                            <p class="numero-paso">
+                                COMENTARIOS
+                            </p>
+
+                            <h2>Comentarios de la comunidad</h2>
+                        </div>
+                    </div>
+
+                    {% if usuario %}
+                        <form
+                            action="/juego/{{ juego.id_bgg }}/comentario"
+                            method="post"
+                            class="formulario-comentario"
+                        >
+                            <label for="comentario">
+                                Escribe tu comentario
+                            </label>
+
+                            <textarea
+                                id="comentario"
+                                name="comentario"
+                                rows="4"
+                                maxlength="1000"
+                                placeholder="Cuenta qué te parece este juego, para qué grupo lo recomiendas, qué sensaciones da o cualquier consejo útil..."
+                                required
+                            ></textarea>
+
+                            <button
+                                type="submit"
+                                class="boton-principal"
+                            >
+                                Publicar comentario
+                            </button>
+                        </form>
+                    {% else %}
+                        <p class="texto-suave">
+                            Para escribir un comentario necesitas iniciar sesión.
+                        </p>
+
+                        <a
+                            href="/iniciar-sesion"
+                            class="boton-principal"
+                        >
+                            Iniciar sesión
+                        </a>
+                    {% endif %}
+
+                    <div class="lista-comentarios">
+                        {% if comentarios %}
+                            {% for comentario in comentarios %}
+                                <article class="comentario-juego">
+                                    <div class="cabecera-comentario">
+                                        <strong>
+                                            {{ comentario.nombre_usuario }}
+                                        </strong>
+
+                                        <span>
+                                            {{ comentario.fecha_creacion }}
+                                        </span>
+                                    </div>
+
+                                    <p>
+                                        {{ comentario.comentario }}
+                                    </p>
+
+                                    {% if usuario and (comentario.usuario_id == usuario.id or usuario.es_admin) %}
+                                        <form
+                                            action="/comentarios/{{ comentario.id }}/eliminar"
+                                            method="post"
+                                            onsubmit="return confirm('¿Seguro que quieres eliminar este comentario?');"
+                                        >
+                                            <button
+                                                type="submit"
+                                                class="boton-peligro boton-pequeno"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </article>
+                            {% endfor %}
+                        {% else %}
+                            <div class="sin-resultados">
+                                <h3>Todavía no hay comentarios</h3>
+
+                                <p>
+                                    Sé el primero en comentar este juego.
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </section>
             </section>
+
+            
         </article>
     </main>
 
