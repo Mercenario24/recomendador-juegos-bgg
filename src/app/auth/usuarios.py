@@ -25,7 +25,8 @@ def crear_tabla_usuarios():
             contrasena_hash TEXT NOT NULL,
             fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             es_admin INTEGER NOT NULL DEFAULT 0,
-            activo INTEGER NOT NULL DEFAULT 1
+            activo INTEGER NOT NULL DEFAULT 1,
+            tipo_cuenta TEXT NOT NULL DEFAULT 'usuario'
         )
     """)
 
@@ -53,6 +54,12 @@ def asegurar_columnas_usuarios():
         cursor.execute("""
             ALTER TABLE usuarios
             ADD COLUMN activo INTEGER NOT NULL DEFAULT 1
+        """)
+
+    if "tipo_cuenta" not in columnas:
+        cursor.execute("""
+            ALTER TABLE usuarios
+            ADD COLUMN tipo_cuenta TEXT NOT NULL DEFAULT 'usuario'
         """)
 
     conexion.commit()
@@ -183,7 +190,8 @@ def obtener_usuario_por_email(email):
             contrasena_hash,
             fecha_registro,
             es_admin,
-            activo
+            activo,
+            tipo_cuenta
         FROM usuarios
         WHERE email = ?
     """, (email_normalizado,))
@@ -249,5 +257,51 @@ def autenticar_usuario(email, contrasena):
         "email": usuario["email"],
         "fecha_registro": usuario["fecha_registro"],
         "es_admin": usuario["es_admin"],
-        "activo": usuario["activo"]
+        "activo": usuario["activo"],
+        "tipo_cuenta": usuario.get("tipo_cuenta", "usuario")
     }
+
+def convertir_usuario_en_asociacion(email):
+    conexion = crear_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        UPDATE usuarios
+        SET tipo_cuenta = 'asociacion'
+        WHERE LOWER(email) = LOWER(?)
+    """, (
+        email,
+    ))
+
+    actualizado = cursor.rowcount > 0
+
+    conexion.commit()
+    conexion.close()
+
+    return actualizado
+
+def convertir_asociacion_en_usuario(email):
+    conexion = crear_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        UPDATE usuarios
+        SET tipo_cuenta = 'usuario'
+        WHERE LOWER(email) = LOWER(?)
+    """, (
+        email,
+    ))
+
+    actualizado = cursor.rowcount > 0
+
+    conexion.commit()
+    conexion.close()
+
+    return actualizado
+
+
+def usuario_es_asociacion(usuario):
+    if usuario is None:
+        return False
+
+    return usuario.get("tipo_cuenta") == "asociacion"
