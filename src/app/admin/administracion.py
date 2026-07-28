@@ -77,13 +77,17 @@ def obtener_estadisticas_admin():
     cursor.execute("SELECT COUNT(*) FROM videos_tiktok_juego")
     total_videos = cursor.fetchone()[0]
 
+    cursor.execute("SELECT COUNT(*) FROM mensajes_soporte")
+    total_tickets = cursor.fetchone()[0]
+
     conexion.close()
 
     return {
         "total_usuarios": total_usuarios,
         "usuarios_activos": usuarios_activos,
         "total_juegos": total_juegos,
-        "total_videos": total_videos
+        "total_videos": total_videos,
+        "total_tickets": total_tickets
     }
 
 
